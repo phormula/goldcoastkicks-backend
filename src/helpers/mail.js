@@ -40,7 +40,7 @@ async function getTransporter() {
   return transporter
 }
 
-async function sendMail(mail) {
+export async function sendMail(mail) {
   // If there is no sender in payload, set default sender
   const payload = mail
   if (!payload.from) {
@@ -62,5 +62,3 @@ async function sendMail(mail) {
   // Return mail response
   return mailInfo
 }
-
-export default sendMail

@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { logEvents } from '@app/middleware/logEvents.js'
+import { logEvents } from '@app/middleware/logEvents'
 
 const errorHandler = (err, req, res, next) => {
   logEvents(`${err.name}: ${err.message}`, 'errLog.txt')
@@ -8,8 +8,10 @@ const errorHandler = (err, req, res, next) => {
       .status(500)
       .send({ status: 'error', message: 'Internal Server has occured' })
   } else {
-    console.error(err.stack)
-    res.status(500).send({ status: 'error', message: err.message })
+    console.log(err.stack || err)
+    res
+      .status(err.status || 500)
+      .send({ status: 'error', message: err.message || err })
   }
 }
 

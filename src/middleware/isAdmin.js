@@ -2,7 +2,7 @@ import createError from 'http-errors'
 import Role from '@model/Role'
 import { getCommonIds } from '@app/helpers'
 
-export default async function (req, res, next) {
+export async function isAdmin(req, res, next) {
   try {
     const roleId = await Role.query()
       .select('id')

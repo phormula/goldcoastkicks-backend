@@ -5,7 +5,11 @@ import { isAdmin, isAuthenticated, validate } from '@app/middleware'
 
 const router = Router()
 
-router.post('/login', validate, AuthController.login)
+router.post(
+  '/login',
+  validate(AuthValidations.loginRules),
+  AuthController.login,
+)
 router.post(
   '/resetpass',
   validate(AuthValidations.resetPasswordRequestRules),

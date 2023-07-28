@@ -1,6 +1,6 @@
 import { compare } from 'bcrypt'
 import { Model } from 'objection'
-import { tokenHelper, mailHelper } from '@app/helpers'
+import { generateTokenHelper, mailHelper } from '@app/helpers'
 import Role from '@model/Role'
 
 class User extends Model {
@@ -17,7 +17,7 @@ class User extends Model {
 
   generateToken(expiresIn = '2h') {
     const data = { id: this.id, email: this.email }
-    return tokenHelper.generateToken(data, expiresIn)
+    return generateTokenHelper(data, expiresIn)
   }
 
   validatePassword(plainPassword) {

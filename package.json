@@ -8,9 +8,12 @@
     "start": "npm run build && node ./build/index.js",
     "dev": "nodemon --exec babel-node src/index.js",
     "lint": "eslint .",
-    "test": "NODE_ENV=test mocha --exit",
+    "test": "NODE_ENV=test mocha --require @babel/register --exit",
     "generate:token": "node -e 'console.log(require('crypto').randomBytes(256).toString('base64'));'",
-    "db:seed": "node database/seeds.js"
+    "knex": "babel-node node_modules/.bin/knex",
+    "migrate": "npm run knex migrate:latest",
+    "migrate:rollback": "npm run knex migrate:rollback --all",
+    "seed": "npm run knex seed:run"
   },
   "author": "Evans Teiko",
   "license": "ISC",
@@ -28,7 +31,7 @@
     "mocha": "^10.2.0",
     "mysql2": "^3.5.2",
     "nodemailer": "^6.9.4",
-    "objection": "^3.1.0",
+    "objection": "^3.1.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
@@ -43,7 +46,7 @@
     "babel-plugin-module-resolver": "^5.0.0",
     "eslint": "^8.45.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-prettier": "^8.8.0",
+    "eslint-config-prettier": "^8.9.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-prettier": "^5.0.0",
     "nodemon": "^3.0.1",

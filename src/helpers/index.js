@@ -1,7 +1,10 @@
-import mailHelper from '@app/helpers/mail'
-import tokenHelper from '@app/helpers/token'
+export { sendMail as mailHelper } from '@app/helpers/mail'
+export {
+  generateToken as generateTokenHelper,
+  verifyToken,
+} from '@app/helpers/token'
 
-function protectedUser(userObj) {
+export function protectedUser(userObj) {
   const fields = ['password', 'email_verified_at', 'updated_at']
 
   fields.forEach((e) => {
@@ -11,10 +14,8 @@ function protectedUser(userObj) {
   return userObj
 }
 
-function getCommonIds(arr1, arr2) {
+export function getCommonIds(arr1, arr2) {
   return arr1
     .map((e) => e.id)
     .filter((el) => arr2.map((ele) => ele.id).includes(el))
 }
-
-export default { mailHelper, tokenHelper, protectedUser, getCommonIds }

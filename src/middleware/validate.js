@@ -1,6 +1,6 @@
 import { validationResult } from 'express-validator'
 
-export default function validate(validations) {
+export function validate(validations) {
   return async (req, res, next) => {
     await Promise.all(validations.map((validation) => validation.run(req)))
 

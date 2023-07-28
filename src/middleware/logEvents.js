@@ -3,7 +3,7 @@ import { existsSync } from 'fs'
 import { promises as fsPromises } from 'fs'
 import { join } from 'path'
 
-const logEvents = async (message, logName) => {
+export const logEvents = async (message, logName) => {
   const currentDateTime = new Date()
   const dateTime = currentDateTime.toLocaleString('en-GB', { timeZone: 'UTC' })
   const logItem = `${dateTime}\t${v4()}\t${message}\n`
@@ -19,10 +19,8 @@ const logEvents = async (message, logName) => {
   }
 }
 
-const logger = (req, res, next) => {
+export const logger = (req, res, next) => {
   logEvents(`${req.method}\t${req.headers.origin}\t${req.url}`, 'reqLog.txt')
   console.log(`${req.method} ${req.path}`)
   next()
 }
-
-export default { logEvents, logger }

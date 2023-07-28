@@ -1,10 +1,10 @@
 import 'dotenv/config'
 import createHttpError from 'http-errors'
 import { hashSync } from 'bcrypt'
-import { query } from '@model/User'
-import { query as _query } from '@model/Role'
-import { query as __query } from '@model/Mail'
 import { protectedUser, tokenHelper } from '@app/helpers'
+import User from '@model/User'
+import Role from '@model/Role'
+import Mail from '@model/Mail'
 
 class AuthController {
   /**`
@@ -16,7 +16,7 @@ class AuthController {
       const { email, password } = req.body
 
       // Find user by email address
-      const user = await query()
+      const user = await User.query()
         .findOne({ email })
         .withGraphJoined('roles(defaultSelects)')
       if (!user) {
@@ -129,8 +129,8 @@ class AuthController {
     try {
       const { first_name, last_name, email, password } = req.body
       const roleName = req.body.role || 'customer'
-      const role = await _query().select('id').findOne({ name: roleName })
-      const user = await query().insertGraph(
+      const role = await Role.query().select('id').findOne({ name: roleName })
+      const user = await User.query().insertGraph(
         [
           {
             first_name,
@@ -145,13 +145,13 @@ class AuthController {
         },
       )
 
-      const registeredUser = await query().findById(user[0].id)
+      const registeredUser = await User.query().findById(user[0].id)
 
       // Generate and return tokens
       const token = registeredUser.generateToken()
       const refreshToken = registeredUser.generateToken('2h')
 
-      const mailTemplate = await __query()
+      const mailTemplate = await Mail.query()
         .select('subject', 'text', 'html')
         .findOne({ type: 'register' })
       await registeredUser.sendMail(mailTemplate)
@@ -186,7 +186,9 @@ class AuthController {
    */
   async updateCurrentUser(req, res, next) {
     try {
-      req.user = await query().updateAndFetchById(req.user.id, { ...req.body })
+      req.user = await User.query().updateAndFetchById(req.user.id, {
+        ...req.body,
+      })
 
       res.status(200).json({ success: true })
     } catch (err) {

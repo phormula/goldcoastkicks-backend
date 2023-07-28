@@ -1,7 +1,7 @@
 import { tokenHelper } from '@app/helpers'
 import User from '@model/User'
 
-export default async function (req, res, next) {
+export async function isPassResetToken(req, res, next) {
   // Get authorization header from request
   const isPassResetToken = req.query.token || req.body.token
 

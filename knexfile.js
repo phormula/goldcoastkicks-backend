@@ -25,7 +25,7 @@ export default {
       port: process.env.DB_PORT,
       user: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
-      database: 'wed_node_test',
+      database: `${process.env.DB_DATABASE}_test`,
     },
     migrations: { directory: './src/database/migrations' },
     seeds: { directory: './src/database/seeders' },

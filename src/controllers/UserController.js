@@ -1,14 +1,14 @@
 import User from '@model/User'
 import Role from '@model/Role'
 import Mail from '@model/Mail'
-import protectedUser from '@app/helpers'
+import { protectedUser } from '@app/helpers'
 
 class UserController {
   async getAllUsers(req, res, next) {
     try {
       const users = await User.query().withGraphJoined('roles(defaultSelects)')
       const result = users.map((u) => protectedUser(u))
-      res.send(result)
+      res.send({ data: result })
     } catch (err) {
       return next(err)
     }
@@ -17,6 +17,7 @@ class UserController {
   async getUser(req, res, next) {
     try {
       const result = await User.query()
+        .alias('roles')
         .findById(req.params.id)
         .withGraphFetched('roles(defaultSelects)')
 
@@ -42,11 +43,13 @@ class UserController {
   async getMailTemplates(req, res, next) {
     try {
       const mailTemplate = await Mail.query()
+      console.log('template sent', mailTemplate)
       res.send(mailTemplate)
     } catch (err) {
+      console.log('template error')
       return next(err)
     }
   }
 }
 
-module.exports = new UserController()
+export default new UserController()

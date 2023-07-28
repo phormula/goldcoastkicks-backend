@@ -1,15 +1,6 @@
-import authenticationMiddleware from '@app/middleware/authentication'
-import isAuthenticated from '@app/middleware/isAuthenticated'
-import isAdmin from '@app/middleware/isAdmin'
-import isSuperAdmin from '@app/middleware/isSuperAdmin'
-import validate from '@app/middleware/validate'
-import isPassResetToken from '@app/middleware/isPassResetToken'
-
-export default {
-  authenticationMiddleware,
-  isAuthenticated,
-  isAdmin,
-  isSuperAdmin,
-  isPassResetToken,
-  validate,
-}
+export { authenticationMiddleware } from '@app/middleware/authentication'
+export { isAuthenticated } from '@app/middleware/isAuthenticated'
+export { isAdmin } from '@app/middleware/isAdmin'
+export { isSuperAdmin } from '@app/middleware/isSuperAdmin'
+export { validate } from '@app/middleware/validate'
+export { isPassResetToken } from '@app/middleware/isPassResetToken'

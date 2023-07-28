@@ -5,11 +5,11 @@ import { readFileSync } from 'fs'
 import express, { urlencoded, json } from 'express'
 import { join } from 'path'
 import cors from 'cors'
-import corsOptions from '@app/config'
+import * as config from '@app/config'
 import { logger } from '@app/middleware/logEvents'
 import errorHandler from '@app/middleware/errorHandler'
 import knex from 'knex'
-import knexConfig from '@app/knexfile'
+import knexConfig from '../knexfile'
 import { Model } from 'objection'
 import routes from '@app/routes'
 import { authenticationMiddleware } from '@app/middleware'
@@ -25,13 +25,13 @@ Model.knex(knexdb)
 app.use(logger)
 
 // Cross Origin Resource Sharing
-app.use(cors(corsOptions))
+app.use(cors(config.corsConfig))
 
 // built-in middleware to handle urlencoded form data
 app.use(urlencoded({ extended: false }))
 
 // built-in middleware for json
-app.use(json())
+app.use(express.json())
 
 app.use(authenticationMiddleware)
 //serve static files

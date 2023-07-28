@@ -1,10 +1,9 @@
-import { tokenHelper } from '@app/helpers'
+import { verifyToken } from '@app/helpers'
 import User from '@model/User'
 
-export default async function (req, res, next) {
+export async function authenticationMiddleware(req, res, next) {
   // Get authorization header from request
   const { authorization, refreshtoken: refreshToken } = req.headers
-
   // Firstly, set request user to null
   req.user = null
 
@@ -14,11 +13,11 @@ export default async function (req, res, next) {
 
     // Decode token - verifies secret and checks exp
     if (isBearerToken) {
-      const token = authorization.slice(7, authorization.length)
+      const token = authorization.split(' ').at(-1)
 
       try {
         // Verify token and get token data
-        const tokenData = await tokenHelper.verifyToken(token)
+        const tokenData = verifyToken(token)
 
         // Find user from database
         const user = await User.query()
