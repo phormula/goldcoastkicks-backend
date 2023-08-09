@@ -3,3 +3,4 @@ node_modules
 logs
 .env
 *.pem
+src/resources/static/assets/uploads/
