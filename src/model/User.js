@@ -32,13 +32,10 @@ class User extends Model {
     return mailHelper(payload)
   }
 
-  // Optional JSON schema. This is not the database schema! Nothing is generated
-  // based on this. This is only used for validation. Whenever a model instance
-  // is created it is checked against this schema. http://json-schema.org/.
   static get jsonSchema() {
     return {
       type: 'object',
-      // required: ['first_name', 'last_name', 'email', 'password'],
+      required: ['first_name', 'last_name', 'email', 'password'],
 
       properties: {
         id: { type: 'integer' },
@@ -50,11 +47,7 @@ class User extends Model {
     }
   }
 
-  // This object defines the relations to other models.
   static get relationMappings() {
-    // One way to prevent circular references
-    // is to require the model classes here.
-
     return {
       roles: {
         relation: Model.ManyToManyRelation,

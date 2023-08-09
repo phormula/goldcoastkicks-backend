@@ -5,31 +5,15 @@ import { isAdmin, isAuthenticated, validate } from '@app/middleware'
 
 const router = Router()
 
-router.post(
-  '/login',
-  validate(AuthValidations.loginRules),
-  AuthController.login,
-)
-router.post(
-  '/resetpass',
-  validate(AuthValidations.resetPasswordRequestRules),
-  AuthController.resetPassRequest,
-)
+router.post('/login', validate(AuthValidations.loginRules), AuthController.login)
+router.post('/resetpass', validate(AuthValidations.resetPasswordRequestRules), AuthController.resetPassRequest)
 
-router.post(
-  '/register',
-  validate(AuthValidations.customerRegisterRules),
-  AuthController.register,
-)
+router.post('/register', validate(AuthValidations.customerRegisterRules), AuthController.register)
 
 router
   .route('/me')
   .get(isAuthenticated, isAdmin, AuthController.getCurrentUser)
-  .put(
-    isAuthenticated,
-    validate(AuthValidations.updateProfileRules),
-    AuthController.updateCurrentUser,
-  )
+  .put(isAuthenticated, validate(AuthValidations.updateProfileRules), AuthController.updateCurrentUser)
   .delete(isAuthenticated, isAdmin, AuthController.deleteCurrentUser)
 
 router.put(

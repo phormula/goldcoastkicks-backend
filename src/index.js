@@ -2,14 +2,13 @@ import 'dotenv/config'
 import { createServer } from 'http'
 import { createServer as _createServer } from 'https'
 import { readFileSync } from 'fs'
-import express, { urlencoded, json } from 'express'
+import express, { urlencoded } from 'express'
 import { join } from 'path'
 import cors from 'cors'
 import * as config from '@app/config'
 import { logger } from '@app/middleware/logEvents'
 import errorHandler from '@app/middleware/errorHandler'
-import knex from 'knex'
-import knexConfig from '../knexfile'
+import db from '@app/database/knexdb'
 import { Model } from 'objection'
 import routes from '@app/routes'
 import { authenticationMiddleware } from '@app/middleware'
@@ -18,8 +17,11 @@ const app = express()
 const PORT = process.env.PORT || 3500
 
 // Initialize knex.
-const knexdb = knex(knexConfig[process.env.NODE_ENV])
-Model.knex(knexdb)
+Model.knex(db)
+
+db.on('query', (queryData) => {
+  console.log('SQL Query:', queryData.sql)
+})
 
 // custom middleware logger
 app.use(logger)
@@ -28,7 +30,7 @@ app.use(logger)
 app.use(cors(config.corsConfig))
 
 // built-in middleware to handle urlencoded form data
-app.use(urlencoded({ extended: false }))
+app.use(urlencoded({ extended: true }))
 
 // built-in middleware for json
 app.use(express.json())
@@ -37,6 +39,7 @@ app.use(authenticationMiddleware)
 //serve static files
 app.use('/', express.static(join(__dirname, '/public')))
 app.use('/auth', express.static(join(__dirname, '/public')))
+app.use('/file/image', express.static(join(__dirname, 'resources', 'static', 'assets', 'uploads')))
 
 routes(app)
 
@@ -47,7 +50,7 @@ app.all('/api/*', (req, res) => {
 app.all('*', (req, res) => {
   res.status(404)
   if (req.accepts('html')) {
-    res.sendFile(join(__dirname, 'src', 'views', '404.html'))
+    res.sendFile(join(__dirname, 'views', '404.html'))
   } else if (req.accepts('json')) {
     res.json({ error: '404 Not Found' })
   } else {
@@ -72,6 +75,5 @@ if (process.env.NODE_ENV !== 'production') {
     console.log(`Server running on port ${PORT}`)
   })
 }
-// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 export default app

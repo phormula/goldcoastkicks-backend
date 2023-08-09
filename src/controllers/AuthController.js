@@ -16,13 +16,9 @@ class AuthController {
       const { email, password } = req.body
 
       // Find user by email address
-      const user = await User.query()
-        .findOne({ email })
-        .withGraphJoined('roles(defaultSelects)')
+      const user = await User.query().findOne({ email }).withGraphJoined('roles(defaultSelects)')
       if (!user) {
-        return next(
-          createHttpError(400, 'There is no user with this email address!'),
-        )
+        return next(createHttpError(400, 'There is no user with this email address!'))
       }
 
       // Check user password
@@ -33,9 +29,7 @@ class AuthController {
       // Generate and return token
       const token = user.generateToken()
       const refreshToken = user.generateToken('2h')
-      return res
-        .status(200)
-        .json({ token, refreshToken, ...protectedUser(user) })
+      return res.status(200).json({ token, refreshToken, ...protectedUser(user) })
     } catch (err) {
       return next(err)
     }
@@ -50,13 +44,9 @@ class AuthController {
       const { email } = req.body
 
       // Find user by email address
-      const user = await query()
-        .findOne({ email })
-        .withGraphJoined('roles(defaultSelects)')
+      const user = await query().findOne({ email }).withGraphJoined('roles(defaultSelects)')
       if (!user) {
-        return next(
-          createHttpError(400, 'There is no user with this email address!'),
-        )
+        return next(createHttpError(400, 'There is no user with this email address!'))
       }
 
       // Generate and return token
@@ -75,9 +65,7 @@ class AuthController {
         <p>${resetLink}</p><br/>
         <p>If you did not make this request please ignore this email.</p>`,
       })
-      return res
-        .status(200)
-        .json({ success: true, message: 'password reset email sent' })
+      return res.status(200).json({ success: true, message: 'password reset email sent' })
     } catch (err) {
       return next(err)
     }
@@ -103,9 +91,7 @@ class AuthController {
       console.log(updateUser)
       console.log(user)
       if (!updateUser) {
-        return next(
-          createHttpError(400, 'There is no user with this email address!'),
-        )
+        return next(createHttpError(400, 'There is no user with this email address!'))
       }
 
       await user.sendMail({
@@ -113,9 +99,7 @@ class AuthController {
         text: `Your password has been succesfully reset.`,
         html: `<p>Your password has been succesfully reset</p>`,
       })
-      return res
-        .status(200)
-        .json({ success: true, message: 'password reset successful' })
+      return res.status(200).json({ success: true, message: 'password reset successful' })
     } catch (err) {
       return next(err)
     }
@@ -149,20 +133,14 @@ class AuthController {
 
       // Generate and return tokens
       const token = registeredUser.generateToken()
-      const refreshToken = registeredUser.generateToken('2h')
+      // const refreshToken = registeredUser.generateToken('2h')
 
-      const mailTemplate = await Mail.query()
-        .select('subject', 'text', 'html')
-        .findOne({ type: 'register' })
+      const mailTemplate = await Mail.query().select('subject', 'text', 'html').findOne({ type: 'register' })
       await registeredUser.sendMail(mailTemplate)
 
-      if (roleName !== 'vendor') {
-        res
-          .status(201)
-          .json({ token, refreshToken, ...protectedUser(registeredUser) })
-      }
+      res.status(201).json({ token, ...protectedUser(registeredUser) })
 
-      return [token, refreshToken, registeredUser]
+      return [token, registeredUser]
     } catch (err) {
       next(err)
     }
