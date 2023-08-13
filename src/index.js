@@ -6,7 +6,7 @@ import express, { urlencoded } from 'express'
 import { join } from 'path'
 import cors from 'cors'
 import * as config from '@app/config'
-import { logger } from '@app/middleware/logEvents'
+import { logger, logEvents } from '@app/middleware/logEvents'
 import errorHandler from '@app/middleware/errorHandler'
 import db from '@app/database/knexdb'
 import { Model } from 'objection'
@@ -20,7 +20,11 @@ const PORT = process.env.PORT || 3500
 Model.knex(db)
 
 db.on('query', (queryData) => {
-  console.log('SQL Query:', queryData.sql)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('SQL Query:', queryData.sql)
+  } else {
+    logEvents(queryData.sql, 'sql_queries.txt')
+  }
 })
 
 // custom middleware logger

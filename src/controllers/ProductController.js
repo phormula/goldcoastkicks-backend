@@ -5,23 +5,30 @@ import db from '@app/database/knexdb'
 class ProductController {
   async getAllProducts(req, res, next) {
     try {
+      const { brand } = req.query
       const baseUrl = `${req.protocol}://${req.get('host')}`
 
       const page = parseInt(req.query.page) || 1
       const limit = parseInt(req.query.limit) || 15
       const offset = (page - 1) * limit
-      console.log(limit, offset)
-      const products = await Product.query()
+
+      let productQuery = Product.query()
         .select('products.*', 'brand.name as brand', 'colorway.name as color')
         .leftJoinRelated('brand')
         .leftJoinRelated('colorway')
         .limit(limit)
         .offset(offset)
 
-      const totalProducts = await Product.query().count('id').first()
-      // console.log(products)
+      let countQuery = Product.query()
+
+      if (brand) {
+        productQuery = productQuery.where('brand.id', brand)
+        countQuery = countQuery.where('brand_id', brand)
+      }
+
+      const totalProducts = await countQuery.count('id').first()
+      const products = await productQuery
       const productData = products.map((product) => {
-        console.log(product.image)
         const image = { image: `${baseUrl}/file/image/${product.image}` }
         return { ...product, ...image }
       })
