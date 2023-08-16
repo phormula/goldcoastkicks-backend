@@ -28,13 +28,10 @@ class SizeController {
     try {
       const { name, description } = req.body
 
-      const brand = await Size.query().insert({
-        name,
-        description,
-      })
+      const size = await Size.query().insert({ name, description })
       res.status(201).json({ data: brand })
 
-      return product
+      return size
     } catch (err) {
       next(err)
     }

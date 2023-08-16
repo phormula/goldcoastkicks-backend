@@ -4,9 +4,7 @@ import { getCommonIds } from '@app/helpers'
 
 export async function isSuperAdmin(req, res, next) {
   try {
-    const roleId = await Role.query()
-      .select('id')
-      .findOne({ name: 'super-admin' })
+    const roleId = await Role.query().select('id').findOne({ key: 'super-admin' })
     const hasAccess = getCommonIds([roleId], req.user.roles)
     if (!hasAccess.length) {
       const error = createError(401, 'Not authorized!')

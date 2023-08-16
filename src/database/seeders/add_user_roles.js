@@ -7,15 +7,18 @@ export async function seed(knex) {
   await knex('roles').del()
   await knex('roles').insert([
     {
-      name: 'super-admin',
+      key: 'super-admin',
+      name: 'Super Admin',
       description: 'Has elevated access, can manage other admins, and has dev access',
     },
     {
-      name: 'admin',
+      key: 'admin',
+      name: 'Admin',
       description: 'Has business administrative access to manage all aspects of the business',
     },
     {
-      name: 'customer',
+      key: 'customer',
+      name: 'Customer',
       description: 'Can only browse and book services',
     },
   ])

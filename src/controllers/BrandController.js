@@ -27,14 +27,10 @@ class BrandController {
   async createBrand(req, res, next) {
     try {
       const { name, description } = req.body
-
-      const brand = await Brand.query().insert({
-        name,
-        description,
-      })
+      const brand = await Brand.query().insert({ name, description })
       res.status(201).json({ data: brand })
 
-      return product
+      return brand
     } catch (err) {
       next(err)
     }

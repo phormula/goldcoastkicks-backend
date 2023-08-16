@@ -40,5 +40,5 @@ export function up(knex) {
  * @returns { Promise<void> }
  */
 export function down(knex) {
-  return knex.schema.dropTableIfExists('order_items').dropTableIfExists('order_items').dropTableIfExists('orders')
+  return knex.schema.dropTableIfExists('order_items').dropTableIfExists('orders').dropTableIfExists('order_statuses')
 }

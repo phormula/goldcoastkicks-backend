@@ -6,8 +6,10 @@ class Brand extends Model {
     return 'brands'
   }
 
-  name(query) {
-    query.select('brands.name')
+  static modifiers = {
+    name(query) {
+      query.select('brands.name')
+    },
   }
 
   static get jsonSchema() {

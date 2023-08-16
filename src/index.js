@@ -14,7 +14,7 @@ import routes from '@app/routes'
 import { authenticationMiddleware } from '@app/middleware'
 
 const app = express()
-const PORT = process.env.PORT || 3500
+const PORT = process.env.PORT || 3501
 
 // Initialize knex.
 Model.knex(db)
@@ -29,7 +29,7 @@ db.on('query', (queryData) => {
 
 // custom middleware logger
 app.use(logger)
-
+app.options('*', cors())
 // Cross Origin Resource Sharing
 app.use(cors(config.corsConfig))
 

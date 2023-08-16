@@ -6,7 +6,7 @@ export async function isAdmin(req, res, next) {
   try {
     const roleId = await Role.query()
       .select('id')
-      .whereIn(['name'], [['super-admin'], ['admin']])
+      .whereIn(['key'], [['super-admin'], ['admin']])
 
     const hasAccess = getCommonIds(roleId, req.user.roles)
     if (!hasAccess.length) {

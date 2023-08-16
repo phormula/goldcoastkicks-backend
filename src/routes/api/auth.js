@@ -23,4 +23,6 @@ router.put(
   AuthController.updatePassword,
 )
 
+router.route('/roles').get(isAuthenticated, isAdmin, AuthController.getRoles)
+
 export default router

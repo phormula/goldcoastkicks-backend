@@ -210,6 +210,17 @@ class AuthController {
       return next(err)
     }
   }
+  async getRoles(req, res, next) {
+    try {
+      const roles = await Role.query().select()
+
+      res.status(200).json({ data: roles })
+
+      return roles
+    } catch (err) {
+      next(err)
+    }
+  }
 }
 
 export default new AuthController()

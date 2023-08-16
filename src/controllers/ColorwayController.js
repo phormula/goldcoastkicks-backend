@@ -29,13 +29,10 @@ class ColorwayController {
     try {
       const { name, description } = req.body
 
-      const colorway = await Colorway.query().insert({
-        name,
-        description,
-      })
+      const colorway = await Colorway.query().insert({ name, description })
       res.status(201).json({ data: colorway })
 
-      return product
+      return colorway
     } catch (err) {
       next(err)
     }
