@@ -1,13 +1,15 @@
 import { Request, Response, NextFunction } from 'express'
 import Size from '@app/model/Size'
+import createHttpError from 'http-errors'
 
 class SizeController {
   async getAllSizes(req: Request, res: Response, next: NextFunction) {
     try {
       const brands = await Size.query()
-      res.send({ data: brands })
-    } catch (err) {
-      return next(err)
+
+      return res.send({ data: brands })
+    } catch (error) {
+      return next(error)
     }
   }
 
@@ -16,50 +18,48 @@ class SizeController {
       const result = await Size.query().findById(req.params.id)
 
       if (result) {
-        res.send({ data: result })
-      } else {
-        res.status(404).send({ status: 'error', message: 'Size not found' })
+        return res.send({ data: result })
       }
-    } catch (err) {
-      return next(err)
+
+      return next(createHttpError(404, 'Size not found'))
+    } catch (error) {
+      return next(error)
     }
   }
 
   async createSize(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, description } = req.body
+      const { size_name, origin_country } = req.body
 
-      const size = await Size.query().insert({ name, description })
-      res.status(201).json({ data: size })
+      const size = await Size.query().insert({ size_name, origin_country })
 
-      return size
-    } catch (err) {
-      next(err)
+      return res.status(201).json({ data: size })
+    } catch (error) {
+      return next(error)
     }
   }
 
-  updateSize(req: Request, res: Response, next: NextFunction) {
-    // Update a product in the database based on the data from the request body
-    const brandId = req.params.id
-    // Size.findByIdAndUpdate(productId, req.body, { new: true }, (err, product) => {
-    //   if (err) {
-    //     res.status(500).json({ error: 'An error occurred while updating the product.' })
-    //   } else {
-    //     res.json(product)
-    //   }
-    // })
+  async updateSize(req: Request, res: Response, next: NextFunction) {
+    try {
+      const sizeId = req.params.id
+      const { size_name, origin_country } = req.body
+      const size = await Size.query().update({ size_name, origin_country }).where({ id: sizeId })
+
+      return res.status(200).json({ data: size })
+    } catch (error) {
+      return next(error)
+    }
   }
 
-  deleteSize(req: Request, res: Response, next: NextFunction) {
-    // Delete a product from the database based on its ID
-    const brandId = req.params.id
-    // Size.findByIdAndDelete(productId, (err) => {
-    //   if (err) {
-    //     res.status(500).json({ error: 'An error occurred while deleting the product.' })
-    //   } else {
-    //     res.json({ message: 'Size deleted successfully.' })
-    //   }
-    // })
+  async deleteSize(req: Request, res: Response, next: NextFunction) {
+    try {
+      const sizeId = req.params.id
+      await Size.query().findById(sizeId).delete()
+
+      return res.status(200).json({ data: { status: 'success', message: 'Size deleted successfully' } })
+    } catch (error) {
+      return next(error)
+    }
   }
 }
 

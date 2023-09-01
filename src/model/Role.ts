@@ -8,7 +8,7 @@ class Role extends Model {
 
   static modifiers = {
     defaultSelects(query: any) {
-      query.select(`roles.id`, `roles.name`)
+      query.select(`roles.id`, 'roles.key', `roles.name`)
     },
   }
 

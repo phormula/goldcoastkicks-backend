@@ -1,7 +1,7 @@
 import { body } from 'express-validator'
 
 class BrandValidations {
-  createRules = [body('name').exists(), body('description').optional()]
+  createRules = [body('size_name').exists(), body('origin_country').optional()]
 
   updateRules = [body('name').exists(), body('description').optional()]
 }

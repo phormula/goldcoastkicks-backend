@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import Order from '@app/model/Order'
 import OrderStatus from '@app/model/OrderStatus'
+import createHttpError from 'http-errors'
 
 class OrderController {
   async getAllOrders(req: Request, res: Response, next: NextFunction) {
@@ -67,28 +68,42 @@ class OrderController {
     }
   }
 
-  updateOrder(req: Request, res: Response, next: NextFunction) {
+  async updateOrder(req: Request, res: Response, next: NextFunction) {
     // Update a product in the database based on the data from the request body
-    const productId = req.params.id
-    // Order.findByIdAndUpdate(productId, req.body, { new: true }, (err, product) => {
-    //   if (err) {
-    //     res.status(500).json({ error: 'An error occurred while updating the product.' })
-    //   } else {
-    //     res.json(product)
-    //   }
-    // })
+    const orderId = req.params.id
+    const { line_orders, note, status } = req.body
+    const updateOrder = await Order.query().upsertGraph(
+      {
+        id: orderId,
+        note,
+        detail: line_orders,
+        status,
+      },
+      {
+        relate: true,
+        unrelate: true,
+      },
+    )
+
+    return res.status(200).json({ data: { ...updateOrder } })
   }
 
-  deleteOrder(req: Request, res: Response, next: NextFunction) {
-    // Delete a product from the database based on its ID
-    const productId = req.params.id
-    // Order.findByIdAndDelete(productId, (err) => {
-    //   if (err) {
-    //     res.status(500).json({ error: 'An error occurred while deleting the product.' })
-    //   } else {
-    //     res.json({ message: 'Order deleted successfully.' })
-    //   }
-    // })
+  async deleteOrder(req: Request, res: Response, next: NextFunction) {
+    try {
+      const orderId = req.params.id
+      const order = await Order.query().findById(orderId)
+
+      if (order) {
+        await order.$relatedQuery('detail').unrelate()
+        await order.$query().delete()
+
+        return res.status(200).json({ data: { status: 'success', message: 'Order deleted successfully' } })
+      }
+
+      return next(createHttpError(500, 'Error deleting order!'))
+    } catch (err) {
+      next(err)
+    }
   }
 }
 

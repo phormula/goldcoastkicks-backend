@@ -1,4 +1,6 @@
 import 'dotenv/config'
+import dns from 'dns'
+dns.setDefaultResultOrder('ipv4first')
 import { createServer } from 'http'
 import { createServer as _createServer } from 'https'
 import { readFileSync } from 'fs'
@@ -68,7 +70,13 @@ app.all('*', (req, res) => {
 app.use(errorHandler)
 
 if (process.env.NODE_ENV !== 'production') {
-  createServer(app).listen(PORT, () => {
+  _createServer(
+    {
+      key: readFileSync('private-key.pem'),
+      cert: readFileSync('server-certificate.pem'),
+    },
+    app,
+  ).listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
   })
 } else {

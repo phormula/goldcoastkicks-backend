@@ -1,15 +1,17 @@
 import { Request, Response, NextFunction } from 'express'
-import User from '@model/User'
-import Role from '@app/model/Role'
-import Mail from '@model/Mail'
 import { protectedUser } from '@app/helpers'
+import createHttpError from 'http-errors'
+import User from '@model/User'
+import Mail from '@model/Mail'
+import Role from '@app/model/Role'
 
 class UserController {
-  async getAllUsers(req: Request, res: Response, next: NextFunction) {
+  async getAllUsers(_req: Request, res: Response, next: NextFunction) {
     try {
       const users = await User.query().withGraphJoined('roles(defaultSelects)')
       const result = users.map((u) => protectedUser(u))
-      res.send({ data: result })
+
+      return res.send({ data: result })
     } catch (err) {
       return next(err)
     }
@@ -20,10 +22,10 @@ class UserController {
       const result = await User.query().alias('roles').findById(req.params.id).withGraphFetched('roles(defaultSelects)')
 
       if (result) {
-        res.send(protectedUser(result))
-      } else {
-        res.send({ status: 'error', message: 'User not found' })
+        return res.send(protectedUser(result))
       }
+
+      return next(createHttpError(404, 'User not found'))
     } catch (err) {
       return next(err)
     }
@@ -31,8 +33,9 @@ class UserController {
 
   async getUserRoles(req: Request, res: Response, next: NextFunction) {
     try {
-      const roles = await Role.query()
-      res.send(roles)
+      const roles = await Role.query().select('*')
+
+      return res.status(200).send(roles)
     } catch (err) {
       return next(err)
     }
@@ -40,11 +43,10 @@ class UserController {
 
   async getMailTemplates(req: Request, res: Response, next: NextFunction) {
     try {
-      const mailTemplate = await Mail.query()
-      console.log('template sent', mailTemplate)
-      res.send(mailTemplate)
+      const mailTemplate = await Mail.query().select('*')
+
+      return res.status(200).send(mailTemplate)
     } catch (err) {
-      console.log('template error')
       return next(err)
     }
   }

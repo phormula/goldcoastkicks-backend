@@ -3,6 +3,7 @@ import OrderItem from '@model/OrderItem'
 import OrderStatus from '@model/OrderStatus'
 
 class Order extends Model {
+  id: number | string
   note: string
   detail: any[]
   status: any[]

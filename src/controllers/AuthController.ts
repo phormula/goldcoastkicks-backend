@@ -3,10 +3,10 @@ import { Request, Response, NextFunction } from 'express'
 import createHttpError from 'http-errors'
 import { hashSync } from 'bcrypt'
 import { protectedUser, verifyToken } from '@app/helpers'
+import { JwtPayload } from 'jsonwebtoken'
 import User from '@model/User'
 import Role from '@app/model/Role'
 import Mail from '@model/Mail'
-import { JwtPayload } from 'jsonwebtoken'
 
 class AuthController {
   /**`
@@ -146,7 +146,7 @@ class AuthController {
 
       return [token, registeredUser]
     } catch (err) {
-      next(err)
+      return next(err)
     }
   }
 
@@ -158,7 +158,7 @@ class AuthController {
     try {
       res.json(protectedUser(req.user as { [key: string]: any }))
     } catch (err) {
-      next(err)
+      return next(err)
     }
   }
 
@@ -176,7 +176,7 @@ class AuthController {
 
       res.status(200).json({ success: true })
     } catch (err) {
-      next(err)
+      return next(err)
     }
   }
 
@@ -189,7 +189,7 @@ class AuthController {
       await (req.user as User).destroy()
       res.status(204).send()
     } catch (err) {
-      next(err)
+      return next(err)
     }
   }
 
@@ -224,7 +224,7 @@ class AuthController {
 
       return roles
     } catch (err) {
-      next(err)
+      return next(err)
     }
   }
 }

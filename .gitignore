@@ -5,3 +5,4 @@ logs
 .env
 *.pem
 src/resources/static/assets/uploads/
+certificate.csr

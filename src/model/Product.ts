@@ -3,17 +3,21 @@ import Size from '@model/Size'
 import Brand from '@model/Brand'
 import Colorway from '@model/Colorway'
 import ProductGallery from '@model/ProductGallery'
+import Currency from '@model/Currency'
 
 class Product extends Model {
-  name!: string
-  description!: string
-  sku!: string
-  image!: string
-  price!: string
-  sizes!: any[]
-  brand!: any[]
-  colorway!: any[]
-  gallery!: any[]
+  id: number | string
+  name: string
+  description: string
+  sku: string
+  image: string
+  selling_price: string
+  sizes: any[]
+  brand: any[]
+  colorways: any[]
+  gallery: any[]
+  buying_currency: any
+  selling_currency: any
 
   static get tableName() {
     return 'products'
@@ -49,12 +53,32 @@ class Product extends Model {
           to: 'products.brand_id',
         },
       },
-      colorway: {
-        relation: Model.BelongsToOneRelation,
+      colorways: {
+        relation: Model.ManyToManyRelation,
         modelClass: Colorway,
         join: {
-          from: 'colorways.id',
-          to: 'products.colorway_id',
+          from: 'products.id',
+          through: {
+            from: 'product_colorways.product_id',
+            to: 'product_colorways.colorway_id',
+          },
+          to: 'colorways.id',
+        },
+      },
+      buying_currency: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Currency,
+        join: {
+          from: 'products.buying_currency_id',
+          to: 'currencies.id',
+        },
+      },
+      selling_currency: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Currency,
+        join: {
+          from: 'products.selling_currency_id',
+          to: 'currencies.id',
         },
       },
     }

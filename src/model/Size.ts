@@ -27,7 +27,7 @@ class Size extends Model {
 
   static get relationMappings() {
     return {
-      users: {
+      products: {
         relation: Model.ManyToManyRelation,
         modelClass: Product,
         join: {

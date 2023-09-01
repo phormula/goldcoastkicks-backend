@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from 'express'
 import Brand from '@app/model/Brand'
+import createHttpError from 'http-errors'
 
 class BrandController {
   async getAllBrands(req: Request, res: Response, next: NextFunction) {
     try {
       const brands = await Brand.query()
-      res.send({ data: brands })
+
+      return res.send({ data: brands })
     } catch (err) {
       return next(err)
     }
@@ -16,10 +18,10 @@ class BrandController {
       const result = await Brand.query().findById(req.params.id)
 
       if (result) {
-        res.send({ data: result })
-      } else {
-        res.status(404).send({ status: 'error', message: 'Brand not found' })
+        return res.send({ data: result })
       }
+
+      return next(createHttpError(404, 'Brand not found'))
     } catch (err) {
       return next(err)
     }
@@ -29,36 +31,34 @@ class BrandController {
     try {
       const { name, description } = req.body
       const brand = await Brand.query().insert({ name, description })
-      res.status(201).json({ data: brand })
 
-      return brand
+      return res.status(201).json({ data: brand })
     } catch (err) {
-      next(err)
+      return next(err)
     }
   }
 
-  updateBrand(req: Request, res: Response, next: NextFunction) {
-    // Update a product in the database based on the data from the request body
-    const brandId = req.params.id
-    // Brand.findByIdAndUpdate(productId, req.body, { new: true }, (err, product) => {
-    //   if (err) {
-    //     res.status(500).json({ error: 'An error occurred while updating the product.' })
-    //   } else {
-    //     res.json(product)
-    //   }
-    // })
+  async updateBrand(req: Request, res: Response, next: NextFunction) {
+    try {
+      const brandId = req.params.id
+      const { name, description } = req.body
+      const brand = await Brand.query().update({ name, description }).where({ id: brandId })
+
+      return res.status(200).json({ data: brand })
+    } catch (error) {
+      return next(error)
+    }
   }
 
-  deleteBrand(req: Request, res: Response, next: NextFunction) {
-    // Delete a product from the database based on its ID
-    const brandId = req.params.id
-    // Brand.findByIdAndDelete(productId, (err) => {
-    //   if (err) {
-    //     res.status(500).json({ error: 'An error occurred while deleting the product.' })
-    //   } else {
-    //     res.json({ message: 'Brand deleted successfully.' })
-    //   }
-    // })
+  async deleteBrand(req: Request, res: Response, next: NextFunction) {
+    try {
+      const brandId = req.params.id
+      await Brand.query().findById(brandId).delete()
+
+      return res.status(200).json({ data: { status: 'success', message: 'Brand deleted successfully' } })
+    } catch (error) {
+      return next(error)
+    }
   }
 }
 

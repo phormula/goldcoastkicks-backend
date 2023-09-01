@@ -9,6 +9,8 @@ import orderRouter from '@routes/api/order'
 import brandRouter from '@routes/api/brand'
 import colorwayRouter from '@routes/api/colorway'
 import sizeRouter from '@routes/api/size'
+import currencyRouter from '@routes/api/currency'
+import configRouter from '@routes/api/config'
 
 import UserController from '@app/controllers/UserController'
 
@@ -26,6 +28,8 @@ router.use('/orders', orderRouter)
 router.use('/brands', brandRouter)
 router.use('/colorways', colorwayRouter)
 router.use('/sizes', sizeRouter)
+router.use('/currencies', currencyRouter)
+router.use('/configs', configRouter)
 
 router.get('/mail-templates', isAuthenticated, isAdmin, UserController.getMailTemplates)
 

@@ -12,7 +12,7 @@ router.post('/register', validate(AuthValidations.customerRegisterRules), AuthCo
 
 router
   .route('/me')
-  .get(isAuthenticated, isAdmin, AuthController.getCurrentUser)
+  .get(isAuthenticated, AuthController.getCurrentUser)
   .put(isAuthenticated, validate(AuthValidations.updateProfileRules), AuthController.updateCurrentUser)
   .delete(isAuthenticated, isAdmin, AuthController.deleteCurrentUser)
 

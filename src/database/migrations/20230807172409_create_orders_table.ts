@@ -1,6 +1,8 @@
-export function up(knex: any) {
+import { Knex } from 'knex'
+
+export function up(knex: Knex): Promise<void> {
   return knex.schema
-    .createTable('order_statuses', function (table: any) {
+    .createTable('order_statuses', function (table: Knex.TableBuilder) {
       table.increments('id')
       table.string('key', 255).unique()
       table.string('value', 255)
@@ -9,14 +11,14 @@ export function up(knex: any) {
       table.timestamp('created_at').defaultTo(knex.fn.now())
       table.timestamp('updated_at').defaultTo(knex.fn.now())
     })
-    .createTable('orders', function (table: any) {
+    .createTable('orders', function (table: Knex.TableBuilder) {
       table.bigIncrements('id')
       table.integer('order_status_id').unsigned().references('id').inTable('order_statuses')
       table.text('note')
       table.timestamp('created_at').defaultTo(knex.fn.now())
       table.timestamp('updated_at').defaultTo(knex.fn.now())
     })
-    .createTable('order_items', (table: any) => {
+    .createTable('order_items', (table: Knex.TableBuilder) => {
       table.increments('id').primary()
       table.bigInteger('order_id').unsigned().references('id').inTable('orders')
       table.integer('quantity')
@@ -31,6 +33,6 @@ export function up(knex: any) {
     })
 }
 
-export function down(knex: any) {
+export function down(knex: Knex): Promise<void> {
   return knex.schema.dropTableIfExists('order_items').dropTableIfExists('orders').dropTableIfExists('order_statuses')
 }

@@ -1,5 +1,7 @@
-export function up(knex: any) {
-  return knex.schema.createTable('user_roles', function (table: any) {
+import { Knex } from 'knex'
+
+export function up(knex: Knex) {
+  return knex.schema.createTable('user_roles', function (table: Knex.TableBuilder) {
     table.bigIncrements('id')
     table.bigInteger('user_id').unsigned()
     table.bigInteger('role_id').unsigned()
@@ -11,6 +13,6 @@ export function up(knex: any) {
   })
 }
 
-export function down(knex: any) {
-  return knex.schema.dropTable('user_roles')
+export function down(knex: Knex) {
+  return knex.schema.dropTableIfExists('user_roles')
 }

@@ -7,8 +7,8 @@ class Brand extends Model {
   }
 
   static modifiers = {
-    name(query: any) {
-      query.select('brands.name')
+    default(query: any) {
+      query.select('brands.id', 'brands.name')
     },
   }
 

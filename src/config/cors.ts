@@ -1,5 +1,7 @@
+const origins = process.env.CORS_ALLOWED_ORIGIN?.split('***')
+
 export default {
-  origin: process.env.CORS_ALLOWED_ORIGIN || 'http://localhost:5173',
+  origin: origins,
   optionsSuccessStatus: 200,
   allowedHeaders: ['Content-Type', 'Authorization', 'RefreshToken'],
   exposedHeaders: ['Content-Length', 'Content-Type', 'RefreshToken', 'Token', 'Authorization'],

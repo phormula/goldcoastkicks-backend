@@ -1,5 +1,7 @@
-export function up(knex: any) {
-  return knex.schema.createTable('mail_templates', function (table: any) {
+import { Knex } from 'knex'
+
+export function up(knex: Knex) {
+  return knex.schema.createTable('mail_templates', function (table: Knex.TableBuilder) {
     table.bigIncrements('id')
     table.string('type', 100)
     table.string('subject')
@@ -10,6 +12,6 @@ export function up(knex: any) {
   })
 }
 
-export function down(knex: any) {
-  return knex.schema.dropTable('mail_templates')
+export function down(knex: Knex) {
+  return knex.schema.dropTableIfExists('mail_templates')
 }

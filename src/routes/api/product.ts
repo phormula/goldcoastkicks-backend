@@ -18,6 +18,18 @@ router.post(
   validate(ProductValidations.createRules),
   ProductController.createProduct,
 )
+
+router.put(
+  '/update/:id',
+  isAuthenticated,
+  isAdmin,
+  upload.single('image'),
+  validate(ProductValidations.updateRules),
+  ProductController.updateProduct,
+)
+
+router.delete('/delete/:id', isAuthenticated, isAdmin, ProductController.deleteProduct)
+
 router.post(
   '/gallery/create',
   isAuthenticated,

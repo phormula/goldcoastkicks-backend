@@ -7,8 +7,8 @@ class Colorway extends Model {
   }
 
   static modifiers = {
-    name(query: any) {
-      query.select('colorways.name')
+    default(query: any) {
+      query.select('colorways.id', 'colorways.name')
     },
   }
 
@@ -26,12 +26,16 @@ class Colorway extends Model {
 
   static get relationMappings() {
     return {
-      product: {
-        relation: Model.HasManyRelation,
+      products: {
+        relation: Model.ManyToManyRelation,
         modelClass: Product,
         join: {
-          from: 'colorways.id',
-          to: 'products.colorway_id',
+          from: 'coloways.id',
+          through: {
+            from: 'product_coloways.coloway_id',
+            to: 'product_coloways.product_id',
+          },
+          to: 'products.id',
         },
       },
     }

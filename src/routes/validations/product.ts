@@ -17,10 +17,34 @@ class ProductValidations {
       }
       return true
     }),
-    body('price').isDecimal().exists(),
+    body('selling_price').isDecimal().exists(),
+    body('buying_currency_id').exists(),
+    body('selling_currency_id').exists(),
     body('sizes').exists().withMessage('sizes is required').isArray().withMessage('sizes is not array'),
-    body('colorway').isInt().exists(),
+    body('colorways').exists().withMessage('colorways is required').isArray().withMessage('colorways is not array'),
     body('brand').isInt().optional(),
+  ]
+
+  updateRules = [
+    body('name').exists(),
+    body('description').exists(),
+    body('sku').exists(),
+    body('image')
+      .optional()
+      .custom((value, { req }) => {
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']
+        const fileExtension = path.extname(req.file.originalname).toLowerCase()
+        if (!allowedExtensions.includes(fileExtension)) {
+          throw new Error('Uploaded file is not an image.')
+        }
+        return true
+      }),
+    body('selling_price').isDecimal().exists(),
+    body('buying_currency_id').exists(),
+    body('selling_currency_id').exists(),
+    body('sizes').exists().withMessage('sizes is required').isArray().withMessage('sizes is not array'),
+    body('colorways').exists().withMessage('colorways is required').isArray().withMessage('colorways is not array'),
+    body('brand').optional(),
   ]
 
   createGalleryRules = [

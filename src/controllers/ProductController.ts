@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import Product from '@app/model/Product'
-import Size from '@app/model/Size'
 import db from '@app/database/knexdb'
+import createHttpError from 'http-errors'
 
 class ProductController {
   async getAllProducts(req: Request, res: Response, next: NextFunction) {
@@ -14,9 +14,14 @@ class ProductController {
       const offset = (page - 1) * limit
 
       let productQuery = Product.query()
-        .select('products.*', 'brand.name as brand', 'colorway.name as color')
+        .select(
+          'products.*',
+          'brand.name as brand',
+          'selling_currency.symbol as currency_symbol',
+          'selling_currency.code as currency_code',
+        )
         .leftJoinRelated('brand')
-        .leftJoinRelated('colorway')
+        .leftJoinRelated('selling_currency')
         .limit(limit)
         .offset(offset)
 
@@ -34,7 +39,7 @@ class ProductController {
         return { ...product, ...image }
       })
 
-      res.send({
+      return res.send({
         data: productData,
         current_page: page,
         per_page: limit,
@@ -51,16 +56,17 @@ class ProductController {
       const baseUrl = `${req.protocol}://${req.get('host')}`
       const product = await Product.query()
         .findById(req.params.id)
-        .withGraphFetched('[sizes(defaultSelects), gallery, colorway, brand]')
+        .withGraphFetched(
+          '[sizes(defaultSelects),gallery,colorways(default),brand(default),selling_currency,selling_currency]',
+        )
 
       if (product) {
         product.gallery = product.gallery.map((g) => ({ ...g, image: `${baseUrl}/file/image/${g.image}` }))
-        res.send({
-          data: { ...product, image: `${baseUrl}/file/image/${product.image}` },
-        })
-      } else {
-        res.status(404).send({ status: 'error', message: 'Product not found' })
+
+        return res.status(200).send({ data: { ...product, image: `${baseUrl}/file/image/${product.image}` } })
       }
+
+      return res.status(404).send({ status: 'error', message: 'Product not found' })
     } catch (err) {
       return next(err)
     }
@@ -68,11 +74,18 @@ class ProductController {
 
   async createProduct(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, description, sku, sizes, price, brand, colorway } = req.body
-
+      const {
+        name,
+        description,
+        sku,
+        sizes,
+        selling_price,
+        buying_currency_id,
+        selling_currency_id,
+        brand,
+        colorways,
+      } = req.body
       const image = req.file?.path.split('/').at(-1)
-
-      const productSizes = await Size.query().findByIds(sizes)
       const product = await Product.query().insertGraph(
         [
           {
@@ -80,46 +93,83 @@ class ProductController {
             description,
             sku,
             image,
-            price,
-            sizes: [...productSizes],
+            selling_price,
+            sizes: sizes.map((s: any) => ({ id: s })),
+            colorways: colorways.map((c: any) => ({ id: c })),
+            buying_currency: { id: buying_currency_id },
+            selling_currency: { id: selling_currency_id },
             ...(brand ? { brand: [{ id: brand }] } : {}),
-            ...(colorway ? { colorway: [{ id: colorway }] } : {}),
           },
         ],
         {
-          relate: ['sizes', ...(brand ? ['brand'] : []), ...(colorway ? ['colorway'] : [])],
+          relate: ['sizes', 'colorways', 'buying_currency', 'selling_currency', ...(brand ? ['brand'] : [])],
         },
       )
-      res.status(201).json({ data: { ...product[0] } })
 
-      return product
+      return res.status(201).json({ data: { ...product[0] } })
     } catch (err) {
       next(err)
     }
   }
 
-  updateProduct(req: Request, res: Response, next: NextFunction) {
-    // Update a product in the database based on the data from the request body
-    const productId = req.params.id
-    // Product.query().findByIdAndUpdate(productId, req.body, { new: true }, (err, product) => {
-    //   if (err) {
-    //     res.status(500).json({ error: 'An error occurred while updating the product.' })
-    //   } else {
-    //     res.json(product)
-    //   }
-    // })
+  async updateProduct(req: Request, res: Response, next: NextFunction) {
+    try {
+      const productId = req.params.id
+      const {
+        name,
+        description,
+        sku,
+        sizes,
+        selling_price,
+        buying_currency_id,
+        selling_currency_id,
+        brand,
+        colorways,
+      } = req.body
+      const image = req.file && req.file.path.split('/').at(-1)
+      const updateProduct = await Product.query().upsertGraph(
+        {
+          id: productId,
+          name,
+          description,
+          sku,
+          ...(image && { image }),
+          selling_price,
+          buying_currency: buying_currency_id,
+          selling_currency: selling_currency_id,
+          sizes: sizes.map((s: any) => ({ id: s })),
+          colorways: colorways.map((c: any) => ({ id: c })),
+          brand: [{ id: brand }],
+        },
+        {
+          relate: true,
+          unrelate: true,
+        },
+      )
+
+      return res.status(200).json({ data: { ...updateProduct } })
+    } catch (err) {
+      next(err)
+    }
   }
 
-  deleteProduct(req: Request, res: Response, next: NextFunction) {
-    // Delete a product from the database based on its ID
-    const productId = req.params.id
-    // Product.findByIdAndDelete(productId, (err) => {
-    //   if (err) {
-    //     res.status(500).json({ error: 'An error occurred while deleting the product.' })
-    //   } else {
-    //     res.json({ message: 'Product deleted successfully.' })
-    //   }
-    // })
+  async deleteProduct(req: Request, res: Response, next: NextFunction) {
+    try {
+      const productId = req.params.id
+      const product = await Product.query().findById(productId)
+
+      if (product) {
+        await product.$relatedQuery('sizes').unrelate()
+        await product.$relatedQuery('colorways').unrelate()
+        await product.$query().delete()
+
+        return res.status(200).json({ data: { status: 'success', message: 'Product deleted successfully' } })
+      }
+
+      return next(createHttpError(400, 'Error deleting product!'))
+    } catch (err) {
+      next(err)
+    }
   }
 
   async createProductGallery(req: Request, res: Response, next: NextFunction) {
@@ -131,10 +181,12 @@ class ProductController {
           return { product_id: Number(productId), image: file.path.split('/').at(-1) }
         })
 
-        const gallery = await db('product_gallery').insert(images, ['image'])
-        res.status(201).json({ data: { success: true } })
-        return gallery
+        await db('product_gallery').insert(images, ['image'])
+
+        return res.status(201).json({ data: { success: true } })
       }
+
+      return next(createHttpError(400, 'Error adding product gallery!'))
     } catch (err) {
       next(err)
     }

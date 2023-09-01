@@ -1,5 +1,7 @@
-export function up(knex: any) {
-  return knex.schema.createTable('product_courts', function (table: any) {
+import { Knex } from 'knex'
+
+export function up(knex: Knex) {
+  return knex.schema.createTable('product_courts', function (table: Knex.TableBuilder) {
     table.increments('id')
     table.integer('product_id').unsigned()
     table.integer('court_id').unsigned()
@@ -11,6 +13,6 @@ export function up(knex: any) {
   })
 }
 
-export function down(knex: any) {
-  return knex.schema.dropTable('product_courts')
+export function down(knex: Knex) {
+  return knex.schema.dropTableIfExists('product_courts')
 }

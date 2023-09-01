@@ -1,14 +1,15 @@
 import { Request, Response, NextFunction } from 'express'
 import Colorway from '@app/model/Colorway'
+import createHttpError from 'http-errors'
 
 class ColorwayController {
   async getAllColorways(req: Request, res: Response, next: NextFunction) {
     try {
       const colorways = await Colorway.query()
 
-      res.send({ data: colorways })
-    } catch (err) {
-      return next(err)
+      return res.send({ data: colorways })
+    } catch (error) {
+      return next(error)
     }
   }
 
@@ -16,13 +17,11 @@ class ColorwayController {
     try {
       const result = await Colorway.query().findById(req.params.id)
 
-      if (result) {
-        res.send({ data: result })
-      } else {
-        res.status(404).send({ status: 'error', message: 'Colorway not found' })
-      }
-    } catch (err) {
-      return next(err)
+      if (result) return res.send({ data: result })
+
+      return next(createHttpError(404, 'Colorway not found'))
+    } catch (error) {
+      return next(error)
     }
   }
 
@@ -31,36 +30,34 @@ class ColorwayController {
       const { name, description } = req.body
 
       const colorway = await Colorway.query().insert({ name, description })
-      res.status(201).json({ data: colorway })
 
-      return colorway
-    } catch (err) {
-      next(err)
+      return res.status(201).json({ data: colorway })
+    } catch (error) {
+      return next(error)
     }
   }
 
-  updateColorway(req: Request, res: Response, next: NextFunction) {
-    // Update a product in the database based on the data from the request body
-    const colorwayId = req.params.id
-    // Colorway.query().findByIdAndUpdate(productId, req.body, { new: true }, (err, product) => {
-    //   if (err) {
-    //     res.status(500).json({ error: 'An error occurred while updating the product.' })
-    //   } else {
-    //     res.json(product)
-    //   }
-    // })
+  async updateColorway(req: Request, res: Response, next: NextFunction) {
+    try {
+      const colorwayId = req.params.id
+      const { name, description } = req.body
+      const colorway = await Colorway.query().update({ name, description }).where({ id: colorwayId })
+
+      return res.status(200).json({ data: colorway })
+    } catch (error) {
+      return next(error)
+    }
   }
 
-  deleteColorway(req: Request, res: Response, next: NextFunction) {
-    // Delete a product from the database based on its ID
-    const colorwayId = req.params.id
-    // Colorway.findByIdAndDelete(productId, (err) => {
-    //   if (err) {
-    //     res.status(500).json({ error: 'An error occurred while deleting the product.' })
-    //   } else {
-    //     res.json({ message: 'Colorway deleted successfully.' })
-    //   }
-    // })
+  async deleteColorway(req: Request, res: Response, next: NextFunction) {
+    try {
+      const colorwayId = req.params.id
+      await Colorway.query().findById(colorwayId).delete()
+
+      return res.status(200).json({ data: { status: 'success', message: 'Colorway deleted successfully' } })
+    } catch (error) {
+      return next(error)
+    }
   }
 }
 
