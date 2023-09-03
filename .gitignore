@@ -6,3 +6,5 @@ logs
 *.pem
 src/resources/static/assets/uploads/
 certificate.csr
+.DS_Store
+*.zip

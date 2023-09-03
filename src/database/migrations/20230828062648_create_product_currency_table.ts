@@ -29,7 +29,6 @@ export async function up(knex: Knex): Promise<void> {
 export async function down(knex: Knex): Promise<void> {
   return knex.schema
     .table('products', async (table: Knex.TableBuilder) => {
-      table.dropColumn('buying_price')
       table.dropForeign('buying_currency_id')
       table.dropColumn('buying_currency_id')
       table.dropForeign('selling_currency_id')

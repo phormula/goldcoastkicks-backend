@@ -1,3 +1,5 @@
+import fetch from 'node-fetch'
+
 class CurrencyConverter {
   async convert(fromCurrencyCode: string, toCurrencyCode?: string) {
     let url: string
@@ -32,7 +34,7 @@ class CurrencyConverter {
         'https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.json',
         requestOptions,
       )
-      const data = await response.json()
+      const data: any = await response.json()
       const currencies: any[] = Object.keys(data)
       let formatCurrency = []
       for (const key of currencies) {

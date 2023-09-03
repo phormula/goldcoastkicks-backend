@@ -2,6 +2,10 @@ import { Model } from 'objection'
 import User from '@model/User'
 
 class Role extends Model {
+  key: string
+  name: string
+  description: string
+
   static get tableName() {
     return 'roles'
   }

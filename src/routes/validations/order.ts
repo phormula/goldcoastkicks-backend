@@ -1,5 +1,4 @@
 import { body } from 'express-validator'
-import path from 'path'
 
 class OrderValidations {
   createRules = [
@@ -29,6 +28,7 @@ class OrderValidations {
         return true
       }),
     body('note').optional(),
+    body('user').optional(),
   ]
 }
 

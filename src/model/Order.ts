@@ -1,12 +1,14 @@
 import { Model } from 'objection'
 import OrderItem from '@model/OrderItem'
 import OrderStatus from '@model/OrderStatus'
+import User from '@model/User'
 
 class Order extends Model {
   id: number | string
   note: string
   detail: any[]
   status: any[]
+  user: User
 
   static get tableName() {
     return 'orders'
@@ -28,6 +30,14 @@ class Order extends Model {
         join: {
           from: 'orders.order_status_id',
           to: 'order_statuses.id',
+        },
+      },
+      user: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: User,
+        join: {
+          from: 'orders.user_id',
+          to: 'users.id',
         },
       },
     }

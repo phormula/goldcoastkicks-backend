@@ -83,7 +83,8 @@ if (process.env.NODE_ENV !== 'production') {
   _createServer(
     {
       key: readFileSync('key.pem'),
-      cert: readFileSync('cert.pem'),
+      cert: readFileSync('certificate.crt'),
+      ca: readFileSync('intermediate.crt'),
     },
     app,
   ).listen(PORT, () => {
