@@ -5,6 +5,12 @@ class OrderStatus extends Model {
     return 'order_statuses'
   }
 
+  static selectAsObject() {
+    return this.query()
+      .select('status.key as status_key', 'status.value as status_value', 'status.color as status_color')
+      .as('status')
+  }
+
   static get jsonSchema() {
     return {
       type: 'object',

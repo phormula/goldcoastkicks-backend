@@ -5,10 +5,7 @@ import OrderValidations from '@app/routes/validations/order'
 
 const router = Router()
 
-// router.route('current-user/:id').get(isAuthenticated, OrderController.getUserOrder)
-router.route('/current-user').get(isAuthenticated, OrderController.getUserOrders)
-
-router.route('/').get(isAuthenticated, isAdmin, OrderController.getAllOrders)
+router.route('/').get(isAuthenticated, OrderController.getAllOrders)
 
 router.route('/:id').get(isAuthenticated, OrderController.getOrder)
 

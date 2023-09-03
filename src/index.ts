@@ -72,8 +72,8 @@ app.use(errorHandler)
 if (process.env.NODE_ENV !== 'production') {
   _createServer(
     {
-      key: readFileSync('private-key.pem'),
-      cert: readFileSync('server-certificate.pem'),
+      key: readFileSync('key.pem'),
+      cert: readFileSync('certificate.pem'),
     },
     app,
   ).listen(PORT, () => {

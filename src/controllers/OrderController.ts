@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
-import Order from '@app/model/Order'
-import OrderStatus from '@app/model/OrderStatus'
 import createHttpError from 'http-errors'
-import Role from '@app/model/Role'
+import Order from '@model/Order'
+import OrderStatus from '@model/OrderStatus'
+import Role from '@model/Role'
 
 class OrderController {
   async getAllOrders(req: Request, res: Response, next: NextFunction) {
@@ -10,7 +10,8 @@ class OrderController {
       const page = Number(req.query.page) || 1
       const limit = Number(req.query.limit) || 15
       const offset = (page - 1) * limit
-      const orders = await Order.query()
+
+      let orderQuery = Order.query()
         .select(
           'orders.*',
           'status.key as status_key',
@@ -20,13 +21,28 @@ class OrderController {
           'user.email as user_email',
           'user.first_name as user_first_name',
           'user.last_name as user_last_name',
+          Order.relatedQuery('detail').sum('price').as('total_price'),
         )
         .leftJoinRelated('status')
         .leftJoinRelated('user')
+        .leftJoinRelated('detail')
+        .groupBy('orders.id')
         .limit(limit)
         .offset(offset)
 
-      const totalOrders = (await Order.query().count('id').first()) as { [key: string]: any }
+      let countQuery = Order.query()
+
+      const isAdmin = req.user?.roles
+        .map((role: Role) => role.key)
+        .some((r: string) => r === 'super-admin' || r === 'admin')
+
+      if (!isAdmin) {
+        orderQuery = orderQuery.where('user_id', Number(req.user?.id))
+        countQuery = countQuery.where('user_id', Number(req.user?.id))
+      }
+
+      const orders = await orderQuery
+      const totalOrders = (await countQuery.count('id').first()) as { [key: string]: any }
 
       res.send({
         data: orders,
@@ -54,44 +70,6 @@ class OrderController {
         return res.send({ data: { ...order } })
       }
       return res.status(404).send({ status: 'error', message: 'Order not found' })
-    } catch (err) {
-      return next(err)
-    }
-  }
-
-  async getUserOrders(req: Request, res: Response, next: NextFunction) {
-    try {
-      const page = Number(req.query.page) || 1
-      const limit = Number(req.query.limit) || 15
-      const offset = (page - 1) * limit
-      const orders = await Order.query()
-        .select(
-          'orders.*',
-          'status.key as status_key',
-          'status.value as status_value',
-          'status.color as status_color',
-          'user.id as user_id',
-          'user.email as user_email',
-          'user.first_name as user_first_name',
-          'user.last_name as user_last_name',
-        )
-        .leftJoinRelated('status')
-        .leftJoinRelated('user')
-        .where({ user_id: req.user?.id })
-        .limit(limit)
-        .offset(offset)
-
-      const totalOrders = (await Order.query()
-        .count('id')
-        .where({ user_id: req.user?.id })) as { [key: string]: any }
-
-      res.send({
-        data: orders,
-        current_page: page,
-        per_page: limit,
-        total: totalOrders['count(`id`)'],
-        last_page: Math.ceil(totalOrders['count(`id`)'] / limit),
-      })
     } catch (err) {
       return next(err)
     }
