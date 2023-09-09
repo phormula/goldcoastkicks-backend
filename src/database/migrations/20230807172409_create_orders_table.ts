@@ -23,14 +23,12 @@ export function up(knex: Knex): Promise<void> {
       table.increments('id').primary()
       table.bigInteger('order_id').unsigned().references('id').inTable('orders')
       table.integer('quantity')
-      table.integer('product_id').unsigned()
+      table.integer('product_id').unsigned().references('id').inTable('products').onDelete('CASCADE')
       table.double('price')
       table.string('size', 255)
       table.string('colour', 255)
       table.timestamp('created_at').defaultTo(knex.fn.now())
       table.timestamp('updated_at').defaultTo(knex.fn.now())
-
-      table.foreign('product_id').references('id').inTable('products').onDelete('CASCADE')
     })
 }
 

@@ -3,10 +3,12 @@ import createHttpError from 'http-errors'
 import Order from '@model/Order'
 import OrderStatus from '@model/OrderStatus'
 import Role from '@model/Role'
+import User from '@app/model/User'
 
 class OrderController {
   async getAllOrders(req: Request, res: Response, next: NextFunction) {
     try {
+      const user = req.user as User
       const page = Number(req.query.page) || 1
       const limit = Number(req.query.limit) || 15
       const offset = (page - 1) * limit
@@ -32,13 +34,11 @@ class OrderController {
 
       let countQuery = Order.query()
 
-      const isAdmin = req.user?.roles
-        .map((role: Role) => role.key)
-        .some((r: string) => r === 'super-admin' || r === 'admin')
+      const isAdmin = user.roles.map((role: Role) => role.key).some((r: string) => r === 'super-admin' || r === 'admin')
 
       if (!isAdmin) {
-        orderQuery = orderQuery.where('user_id', Number(req.user?.id))
-        countQuery = countQuery.where('user_id', Number(req.user?.id))
+        orderQuery = orderQuery.where('user_id', Number(user.id))
+        countQuery = countQuery.where('user_id', Number(user.id))
       }
 
       const orders = await orderQuery
@@ -62,11 +62,11 @@ class OrderController {
         .findById(req.params.id)
         .withGraphFetched('[detail, status,user(defaultSelects)]')
 
-      const isAdmin = req.user?.roles
-        .map((role: Role) => role.key)
-        .some((r: string) => r === 'super-admin' || r === 'admin')
+      const user = req.user as User
 
-      if (order && (isAdmin || order.user.id === req.user?.id)) {
+      const isAdmin = user.roles.map((role: Role) => role.key).some((r: string) => r === 'super-admin' || r === 'admin')
+
+      if (order && (isAdmin || order.user.id === user.id)) {
         return res.send({ data: { ...order } })
       }
       return res.status(404).send({ status: 'error', message: 'Order not found' })
@@ -79,7 +79,7 @@ class OrderController {
     try {
       const { line_orders, note, user } = req.body
 
-      const userOrdered = user || req.user?.id
+      const userOrdered = user || (req.user as User).id
       const orderStatus = await OrderStatus.query().findOne({ key: 'placed' })
       const order = await Order.query().upsertGraph(
         [

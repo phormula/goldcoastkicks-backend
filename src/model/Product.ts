@@ -4,6 +4,9 @@ import Brand from '@model/Brand'
 import Colorway from '@model/Colorway'
 import ProductGallery from '@model/ProductGallery'
 import Currency from '@model/Currency'
+import Position from '@model/Position'
+import Type from '@model/Type'
+import Court from '@model/Court'
 
 class Product extends Model {
   id: number | string
@@ -18,6 +21,9 @@ class Product extends Model {
   gallery: any[]
   buying_currency: any
   selling_currency: any
+  position: any
+  type: any
+  court: any
 
   static get tableName() {
     return 'products'
@@ -63,6 +69,42 @@ class Product extends Model {
             to: 'product_colorways.colorway_id',
           },
           to: 'colorways.id',
+        },
+      },
+      position: {
+        relation: Model.ManyToManyRelation,
+        modelClass: Position,
+        join: {
+          from: 'products.id',
+          through: {
+            from: 'product_positions.product_id',
+            to: 'product_positions.position_id',
+          },
+          to: 'positions.id',
+        },
+      },
+      court: {
+        relation: Model.ManyToManyRelation,
+        modelClass: Court,
+        join: {
+          from: 'products.id',
+          through: {
+            from: 'product_courts.product_id',
+            to: 'product_courts.court_id',
+          },
+          to: 'courts.id',
+        },
+      },
+      type: {
+        relation: Model.ManyToManyRelation,
+        modelClass: Type,
+        join: {
+          from: 'products.id',
+          through: {
+            from: 'product_types.product_id',
+            to: 'product_types.type_id',
+          },
+          to: 'types.id',
         },
       },
       buying_currency: {

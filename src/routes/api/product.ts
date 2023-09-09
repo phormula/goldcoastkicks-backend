@@ -7,6 +7,7 @@ import { upload } from '@app/middleware/upload'
 const router = Router()
 
 router.route('/').get(ProductController.getAllProducts)
+router.route('/prefilters').get(ProductController.prefilters)
 
 router.route('/:id').get(ProductController.getProduct)
 

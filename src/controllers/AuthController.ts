@@ -7,6 +7,8 @@ import { JwtPayload } from 'jsonwebtoken'
 import User from '@model/User'
 import Role from '@app/model/Role'
 import Mail from '@model/Mail'
+import OAuthService from '@app/services/OAuth.service'
+import AuthService from '@app/services/Auth.service'
 
 class AuthController {
   /**`
@@ -20,18 +22,51 @@ class AuthController {
       // Find user by email address
       const user = await User.query().findOne({ email }).withGraphJoined('roles(defaultSelects)')
       if (!user) {
-        return next(createHttpError(400, 'There is no user with this email address!'))
+        return res.status(400).json({ message: 'Incorrect email or password!' })
       }
 
       // Check user password
       const isValidPassword = await user.validatePassword(password)
       if (!isValidPassword) {
-        return next(createHttpError(400, 'Incorrect password!'))
+        return res.status(400).json({ message: 'Incorrect email or password!' })
       }
       // Generate and return token
       const token = user.generateToken()
       const refreshToken = user.generateToken('2h')
-      return res.status(200).json({ token, refreshToken, ...protectedUser(user) })
+      return res.status(200).json({ data: { token, refreshToken, ...protectedUser(user) } })
+    } catch (err) {
+      return next(err)
+    }
+  }
+
+  async loginByOauth(req: Request, res: Response, next: NextFunction) {
+    try {
+      // User is authenticated, you can generate an access token here
+      const { id_token } = req.body
+      const oAuthUser = await OAuthService.verifyGoogleToken(id_token)
+
+      if (oAuthUser) {
+        const user = await User.query().findOne({ email: oAuthUser.email }).withGraphJoined('roles(defaultSelects)')
+        if (!user) {
+          const userData = {
+            first_name: oAuthUser.given_name,
+            last_name: oAuthUser.family_name,
+            email: oAuthUser.email,
+            role: 'customer',
+          }
+
+          const user = await AuthService.register(userData)
+
+          return res.status(201).json({ data: user })
+        }
+
+        // Generate and return token
+        const userToken = user.generateToken()
+        const refreshToken = user.generateToken('2h')
+        return res.status(200).json({ data: { token: userToken, refreshToken, ...protectedUser(user) } })
+      }
+
+      return res.status(500).json({ data: { status: 'error', message: oAuthUser } })
     } catch (err) {
       return next(err)
     }
@@ -45,29 +80,13 @@ class AuthController {
     try {
       const { email } = req.body
 
-      // Find user by email address
-      const user = await User.query().findOne({ email }).withGraphJoined('roles(defaultSelects)')
-      if (!user) {
-        return next(createHttpError(400, 'There is no user with this email address!'))
+      const result = await AuthService.resetPassRequest(email)
+
+      if (result.status === 'error') {
+        return res.status(404).json(result)
       }
 
-      // Generate and return token
-      const token = user.generateToken('0.5h')
-      const resetLink = `${process.env.APP_URL}/auth/resetpass?token=${token}`
-      await user.sendMail({
-        subject: 'Password Reset Request',
-        text: `Hello ${user.first_name}, You have requested a password reset. 
-        click on the link below to reset your password.\n\n
-        ${resetLink}
-        \n\n
-        If you did not make this request please ignore this email.`,
-        html: `<h3>Hello ${user.first_name},</h3>
-        <p>You have requested a password reset.</p>
-        <p>click on the link below to reset your password.</p><br/>
-        <p>${resetLink}</p><br/>
-        <p>If you did not make this request please ignore this email.</p>`,
-      })
-      return res.status(200).json({ success: true, message: 'password reset email sent' })
+      return res.status(200).json(result)
     } catch (err) {
       return next(err)
     }
@@ -117,34 +136,17 @@ class AuthController {
     try {
       const { first_name, last_name, email, password } = req.body
       const roleName = req.body.role || 'customer'
-      const role = await Role.query().select('id').findOne({ name: roleName })
-      const user = await User.query().insertGraph(
-        [
-          {
-            first_name,
-            last_name,
-            email,
-            password: hashSync(password, Number(process.env.SALT)),
-            roles: [role],
-          },
-        ],
-        {
-          relate: ['roles'],
-        },
-      )
+      const data = {
+        first_name,
+        last_name,
+        email,
+        password: hashSync(password, Number(process.env.SALT)),
+        role: roleName,
+      }
 
-      const registeredUser = await User.query().findById(user[0].id)
+      const registeredUser = await AuthService.register(data)
 
-      // Generate and return tokens
-      const token = registeredUser?.generateToken()
-      // const refreshToken = registeredUser.generateToken('2h')
-
-      const mailTemplate = await Mail.query().select('subject', 'text', 'html').findOne({ type: 'register' })
-      await registeredUser?.sendMail(mailTemplate)
-
-      res.status(201).json({ token, ...protectedUser(registeredUser as { [key: string]: any }) })
-
-      return [token, registeredUser]
+      return res.status(201).json({ data: registeredUser })
     } catch (err) {
       return next(err)
     }
@@ -169,7 +171,7 @@ class AuthController {
   async updateCurrentUser(req: Request, res: Response, next: NextFunction) {
     try {
       if (req.user) {
-        req.user = await User.query().updateAndFetchById(req.user.id, {
+        req.user = await User.query().updateAndFetchById((req.user as User).id, {
           ...req.body,
         })
       }
@@ -200,16 +202,16 @@ class AuthController {
   async updatePassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { current, password } = req.body
-
+      const user = req.user as User
       // Check user password
-      const isValidPassword = await req.user?.validatePassword(current)
+      const isValidPassword = await user.validatePassword(current)
       if (!isValidPassword) {
         return next(createHttpError(400, 'Incorrect password!'))
       }
 
       // Update password
-      req.user!.password = password
-      await req.user?.save()
+      user.password = password
+      await user.save()
 
       return res.json({ success: true })
     } catch (err) {

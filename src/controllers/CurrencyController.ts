@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import createHttpError from 'http-errors'
 import Currency from '@app/model/Currency'
-import currencyConverterService from '@app/services/currency-converter.service'
+import CurrencyConverterService from '@app/services/currency-converter.service'
 import db from '@app/database/knexdb'
 
 class CurrencyController {
@@ -74,7 +74,7 @@ class CurrencyController {
 
   async addCurrenciesToDb(req: Request, res: Response, next: NextFunction) {
     try {
-      const currencies = await currencyConverterService.getCurrucies()
+      const currencies = await CurrencyConverterService.getCurrucies()
       await db('currencies').insert(currencies)
 
       return res.status(201).send({ success: true })
@@ -86,9 +86,9 @@ class CurrencyController {
   async convert(req: Request, res: Response, next: NextFunction) {
     try {
       const { from, to } = req.body
-      const currencyConverter = await currencyConverterService.convert(from, to)
+      const currencyConverter = await CurrencyConverterService.convert(from, to)
 
-      return res.status(201).send({ data: currencyConverter })
+      return res.status(200).send({ data: currencyConverter })
     } catch (err) {
       return next(err)
     }

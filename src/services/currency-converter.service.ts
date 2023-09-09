@@ -1,6 +1,6 @@
-import fetch from 'node-fetch'
+import request from 'es6-request'
 
-class CurrencyConverter {
+class CurrencyConverterService {
   async convert(fromCurrencyCode: string, toCurrencyCode?: string) {
     let url: string
     if (!fromCurrencyCode) {
@@ -13,12 +13,8 @@ class CurrencyConverter {
     }
 
     try {
-      const requestOptions = {
-        method: 'GET',
-      }
-      const response = await fetch(url, requestOptions)
-      const data = await response.json()
-      return data
+      const [body, res] = await request.get(url)
+      return JSON.parse(String(body))
     } catch (error) {
       console.error(error)
       return error
@@ -27,14 +23,10 @@ class CurrencyConverter {
 
   async getCurrucies() {
     try {
-      const requestOptions = {
-        method: 'GET',
-      }
-      const response = await fetch(
+      const [body, response] = await request.get(
         'https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.json',
-        requestOptions,
       )
-      const data: any = await response.json()
+      const data: any = JSON.parse(String(body))
       const currencies: any[] = Object.keys(data)
       let formatCurrency = []
       for (const key of currencies) {
@@ -48,4 +40,4 @@ class CurrencyConverter {
   }
 }
 
-export default new CurrencyConverter()
+export default new CurrencyConverterService()
