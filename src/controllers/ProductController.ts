@@ -32,7 +32,7 @@ class ProductController {
   async createProduct(req: Request, res: Response, next: NextFunction) {
     try {
       const product = await ProductService.createProduct(req.body, req.file)
-
+      console.log(req.body)
       return res.status(201).json(product)
     } catch (err) {
       next(err)
