@@ -9,6 +9,9 @@ import orderRouter from '@routes/api/order'
 import brandRouter from '@routes/api/brand'
 import colorwayRouter from '@routes/api/colorway'
 import sizeRouter from '@routes/api/size'
+import courtRouter from '@routes/api/court'
+import positionRouter from '@routes/api/position'
+import typeRouter from '@routes/api/type'
 import currencyRouter from '@routes/api/currency'
 import configRouter from '@routes/api/config'
 
@@ -19,17 +22,21 @@ import { isAdmin, isAuthenticated } from '@app/middleware'
 const router = Router()
 
 router.use('/auth', authRouter)
-router.use('/users', userRouter)
 router.use('/admin', adminRouter)
 router.use('/super-admin', superAdminRouter)
+router.use('/users', userRouter)
 
-router.use('/products', productRouter)
-router.use('/orders', orderRouter)
 router.use('/brands', brandRouter)
 router.use('/colorways', colorwayRouter)
-router.use('/sizes', sizeRouter)
-router.use('/currencies', currencyRouter)
 router.use('/configs', configRouter)
+router.use('/currencies', currencyRouter)
+router.use('/orders', orderRouter)
+router.use('/products', productRouter)
+router.use('/sizes', sizeRouter)
+
+router.use('/courts', courtRouter)
+router.use('/positions', positionRouter)
+router.use('/types', typeRouter)
 
 router.get('/mail-templates', isAuthenticated, isAdmin, UserController.getMailTemplates)
 

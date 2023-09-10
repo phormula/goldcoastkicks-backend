@@ -50,7 +50,7 @@ class ProductService {
       }
 
       const totalProducts = (await countQuery.count('products.id').as('count').first()) as { [key: string]: any }
-      const products = await productQuery
+      const products = await productQuery.groupBy('products.id')
       const productData = products.map((product) => {
         const image = { image: `${baseUrl}/file/image/${product.image}` }
         return { ...product, ...image }
@@ -73,7 +73,7 @@ class ProductService {
       const product = await Product.query()
         .findById(id)
         .withGraphFetched(
-          '[sizes(defaultSelects),gallery,colorways(default),brand(default),selling_currency,selling_currency]',
+          '[sizes(defaultSelects),gallery,colorways(default),brand(default),buying_currency,selling_currency,position(defaultSelects),type(defaultSelects),court(defaultSelects)]',
         )
 
       if (product) {

@@ -33,9 +33,9 @@ class CurrencyConverterService {
         formatCurrency.push({ code: key, name: data[key] })
       }
       return formatCurrency
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
-      return error
+      throw new Error(error)
     }
   }
 }

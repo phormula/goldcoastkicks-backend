@@ -32,7 +32,7 @@ class ProductController {
   async createProduct(req: Request, res: Response, next: NextFunction) {
     try {
       const product = await ProductService.createProduct(req.body, req.file)
-      console.log(req.body)
+
       return res.status(201).json(product)
     } catch (err) {
       next(err)
@@ -51,6 +51,9 @@ class ProductController {
         buying_currency_id,
         selling_currency_id,
         brand,
+        position,
+        type,
+        court,
         colorways,
       } = req.body
       const image = req.file && req.file.path.split('/').at(-1)
@@ -62,11 +65,14 @@ class ProductController {
           sku,
           ...(image && { image }),
           selling_price,
-          buying_currency: buying_currency_id,
-          selling_currency: selling_currency_id,
+          buying_currency: { id: buying_currency_id },
+          selling_currency: { id: selling_currency_id },
           sizes: sizes.map((s: any) => ({ id: s })),
           colorways: colorways.map((c: any) => ({ id: c })),
           brand: [{ id: brand }],
+          position: position.map((s: any) => ({ id: s })),
+          type: type.map((s: any) => ({ id: s })),
+          court: court.map((s: any) => ({ id: s })),
         },
         {
           relate: true,

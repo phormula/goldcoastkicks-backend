@@ -44,7 +44,10 @@ class ProductValidations {
     body('selling_currency_id').exists(),
     body('sizes').exists().withMessage('sizes is required').isArray().withMessage('sizes is not array'),
     body('colorways').exists().withMessage('colorways is required').isArray().withMessage('colorways is not array'),
-    body('brand').optional(),
+    body('brand').exists(),
+    body('type').exists().isArray(),
+    body('position').exists().isArray(),
+    body('court').exists().isArray(),
   ]
 
   createGalleryRules = [
