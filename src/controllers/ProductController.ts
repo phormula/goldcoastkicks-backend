@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express'
-import Product from '@app/model/Product'
 import ProductService from '@app/services/Product.service'
 
 class ProductController {
@@ -42,43 +41,7 @@ class ProductController {
   async updateProduct(req: Request, res: Response, next: NextFunction) {
     try {
       const productId = req.params.id
-      const {
-        name,
-        description,
-        sku,
-        sizes,
-        selling_price,
-        buying_currency_id,
-        selling_currency_id,
-        brand,
-        position,
-        type,
-        court,
-        colorways,
-      } = req.body
-      const image = req.file && req.file.path.split('/').at(-1)
-      const updateProduct = await Product.query().upsertGraph(
-        {
-          id: productId,
-          name,
-          description,
-          sku,
-          ...(image && { image }),
-          selling_price,
-          buying_currency: { id: buying_currency_id },
-          selling_currency: { id: selling_currency_id },
-          sizes: sizes.map((s: any) => ({ id: s })),
-          colorways: colorways.map((c: any) => ({ id: c })),
-          brand: [{ id: brand }],
-          position: position.map((s: any) => ({ id: s })),
-          type: type.map((s: any) => ({ id: s })),
-          court: court.map((s: any) => ({ id: s })),
-        },
-        {
-          relate: true,
-          unrelate: true,
-        },
-      )
+      const updateProduct = await ProductService.updateProduct(productId, req.body, req.file)
 
       return res.status(200).json({ data: { ...updateProduct } })
     } catch (err) {
@@ -116,13 +79,25 @@ class ProductController {
     }
   }
 
+  async updateProductGallery(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { productId } = req.body
+      const files = req.files as Express.Multer.File[]
+      const result = await ProductService.updateProductGallery(productId, files)
+
+      if (result.data.status === 'error') {
+        return res.status(400).json(result)
+      }
+
+      return res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  }
+
   async prefilters(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await ProductService.prefilters()
-
-      // if (result.data.status === 'error') {
-      //   return res.status(400).json(result)
-      // }
 
       return res.status(200).json(result)
     } catch (err) {

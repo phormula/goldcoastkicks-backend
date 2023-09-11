@@ -40,4 +40,13 @@ router.post(
   ProductController.createProductGallery,
 )
 
+router.put(
+  '/gallery/update',
+  isAuthenticated,
+  isAdmin,
+  upload.array('images', 10),
+  validate(ProductValidations.updateGalleryRules),
+  ProductController.updateProductGallery,
+)
+
 export default router

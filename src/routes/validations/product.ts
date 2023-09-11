@@ -17,6 +17,7 @@ class ProductValidations {
       }
       return true
     }),
+    body('buying_price').isDecimal().exists(),
     body('selling_price').isDecimal().exists(),
     body('buying_currency_id').exists(),
     body('selling_currency_id').exists(),
@@ -39,6 +40,7 @@ class ProductValidations {
         }
         return true
       }),
+    body('buying_price').isDecimal().exists(),
     body('selling_price').isDecimal().exists(),
     body('buying_currency_id').exists(),
     body('selling_currency_id').exists(),
@@ -51,6 +53,23 @@ class ProductValidations {
   ]
 
   createGalleryRules = [
+    body('productId').exists(),
+    body('images').custom((value, { req }) => {
+      if (!req.files) {
+        throw new Error('Image field is required.')
+      }
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']
+      req.files.forEach((image: any) => {
+        const fileExtension = path.extname(image.originalname).toLowerCase()
+        if (!allowedExtensions.includes(fileExtension)) {
+          throw new Error('Uploaded file is not an image.')
+        }
+      })
+      return true
+    }),
+  ]
+
+  updateGalleryRules = [
     body('productId').exists(),
     body('images').custom((value, { req }) => {
       if (!req.files) {

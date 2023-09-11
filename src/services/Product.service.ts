@@ -1,4 +1,3 @@
-import { Request, Response, NextFunction } from 'express'
 import db from '@app/database/knexdb'
 import Product from '@model/Product'
 import Brand from '@model/Brand'
@@ -6,6 +5,8 @@ import Position from '@model/Position'
 import Court from '@model/Court'
 import Type from '@app/model/Type'
 import { filterKey } from '@app/helpers'
+import ProductGallery from '@app/model/ProductGallery'
+import fs from 'fs/promises'
 
 class ProductService {
   async getAllProducts(requestQuery: { [key: string]: any }, baseUrl: string) {
@@ -63,8 +64,8 @@ class ProductService {
         total: totalProducts['count(`products`.`id`)'],
         last_page: Math.ceil(totalProducts['count(`products`.`id`)'] / limitData),
       }
-    } catch (err) {
-      return err
+    } catch (err: any) {
+      throw new Error(err.message)
     }
   }
 
@@ -73,8 +74,9 @@ class ProductService {
       const product = await Product.query()
         .findById(id)
         .withGraphFetched(
-          '[sizes(defaultSelects),gallery,colorways(default),brand(default),buying_currency,selling_currency,position(defaultSelects),type(defaultSelects),court(defaultSelects)]',
+          '[sizes(defaultSelects),gallery,colorways(default),brand(default),selling_currency,position(defaultSelects),type(defaultSelects),court(defaultSelects)]',
         )
+        .withGraphFetched('[buying_currency]')
 
       if (product) {
         product.gallery = product.gallery.map((g) => ({ ...g, image: `${baseUrl}/file/image/${g.image}` }))
@@ -84,7 +86,7 @@ class ProductService {
 
       return { status: 'error', message: 'Product not found' }
     } catch (err: any) {
-      return err
+      throw new Error(err.message)
     }
   }
 
@@ -95,6 +97,7 @@ class ProductService {
         description,
         sku,
         sizes,
+        buying_price,
         selling_price,
         buying_currency_id,
         selling_currency_id,
@@ -112,6 +115,7 @@ class ProductService {
             description,
             sku,
             image,
+            buying_price,
             selling_price,
             position: position.map((s: any) => ({ id: s })),
             type: type.map((s: any) => ({ id: s })),
@@ -138,39 +142,46 @@ class ProductService {
       )
 
       return { data: { ...product } }
-    } catch (err) {
-      return err
+    } catch (err: any) {
+      throw new Error(err.message)
     }
   }
 
-  async updateProduct(req: Request, res: Response, next: NextFunction) {
+  async updateProduct(id: string | number, data: { [key: string]: any }, file: any = null) {
     try {
-      const productId = req.params.id
       const {
         name,
         description,
         sku,
         sizes,
+        buying_price,
         selling_price,
         buying_currency_id,
         selling_currency_id,
         brand,
+        position,
+        type,
+        court,
         colorways,
-      } = req.body
-      const image = req.file && req.file.path.split('/').at(-1)
+      } = data
+      const image = file && file.path.split('/').at(-1)
       const updateProduct = await Product.query().upsertGraph(
         {
-          id: productId,
+          id,
           name,
           description,
           sku,
           ...(image && { image }),
+          buying_price,
           selling_price,
-          buying_currency: buying_currency_id,
-          selling_currency: selling_currency_id,
+          buying_currency: { id: buying_currency_id },
+          selling_currency: { id: selling_currency_id },
           sizes: sizes.map((s: any) => ({ id: s })),
           colorways: colorways.map((c: any) => ({ id: c })),
           brand: [{ id: brand }],
+          position: position.map((s: any) => ({ id: s })),
+          type: type.map((s: any) => ({ id: s })),
+          court: court.map((s: any) => ({ id: s })),
         },
         {
           relate: true,
@@ -178,9 +189,9 @@ class ProductService {
         },
       )
 
-      return res.status(200).json({ data: { ...updateProduct } })
-    } catch (err) {
-      next(err)
+      return updateProduct
+    } catch (err: any) {
+      throw new Error(err.message)
     }
   }
 
@@ -198,7 +209,7 @@ class ProductService {
 
       return { data: { status: 'error', message: 'Error deleting product!' } }
     } catch (err: any) {
-      return err
+      throw new Error(err.message)
     }
   }
 
@@ -216,7 +227,28 @@ class ProductService {
 
       return { data: { status: 'error', message: 'Error adding product gallery!' } }
     } catch (err: any) {
-      return err
+      throw new Error(err.message)
+    }
+  }
+
+  async updateProductGallery(productId: string | number, files: Express.Multer.File[]) {
+    try {
+      await ProductGallery.query()
+        .delete()
+        .where({ product_id: Number(productId) })
+
+      // files.forEach((file: Express.Multer.File) => fs.unlink(file.path))
+
+      if (files.length) {
+        const images = files.map((file: Express.Multer.File) => {
+          return { product_id: Number(productId), image: file.path.split('/').at(-1) }
+        })
+        await db('product_gallery').insert(images, ['image'])
+      }
+
+      return { data: { status: 'success', message: 'Product gallery updated successfully' } }
+    } catch (err: any) {
+      throw new Error(err.message)
     }
   }
 
@@ -236,7 +268,7 @@ class ProductService {
 
       return { data: filters }
     } catch (err: any) {
-      return err
+      throw new Error(err.message)
     }
   }
 }

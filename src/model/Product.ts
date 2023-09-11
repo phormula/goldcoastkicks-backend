@@ -14,6 +14,7 @@ class Product extends Model {
   description: string
   sku: string
   image: string
+  buying_price: string
   selling_price: string
   sizes: any[]
   brand: any[]
