@@ -1,23 +1,26 @@
+import fs from 'fs/promises'
+import path from 'path'
+import { filterKey } from '@app/helpers'
 import db from '@app/database/knexdb'
 import Product from '@model/Product'
 import Brand from '@model/Brand'
 import Position from '@model/Position'
 import Court from '@model/Court'
-import Type from '@app/model/Type'
-import { filterKey } from '@app/helpers'
-import ProductGallery from '@app/model/ProductGallery'
-import fs from 'fs/promises'
+import Type from '@model/Type'
+import ProductGallery from '@model/ProductGallery'
+import User from '@model/User'
+import { isAdmin } from '@app/helpers'
 
 class ProductService {
   async getAllProducts(requestQuery: { [key: string]: any }, baseUrl: string) {
     try {
-      const { brand, position, type, court, page, limit } = requestQuery
+      const { brand, position, type, court, page, limit, query } = requestQuery
       const pageData = Number(page) || 1
       const limitData = Number(limit) || 15
       const offset = (pageData - 1) * limitData
 
       let productQuery = Product.query()
-        .select(
+        .distinct(
           'products.*',
           'brand.name as brand',
           'selling_currency.symbol as currency_symbol',
@@ -28,11 +31,36 @@ class ProductService {
         .leftJoinRelated('type')
         .leftJoinRelated('court')
         .leftJoinRelated('selling_currency')
-        .limit(limitData)
-        .offset(offset)
 
       let countQuery = Product.query()
 
+      if (query) {
+        const searchWords = query.split(' ')
+        productQuery = productQuery
+          .orWhere((builder) => {
+            for (const word of searchWords) builder.orWhere('brand.name', 'like', `%${word}%`)
+          })
+          .orWhere((builder) => {
+            for (const word of searchWords) builder.orWhere('position.name', 'like', `%${word}%`)
+          })
+          .orWhere((builder) => {
+            for (const word of searchWords) builder.orWhere('type.name', 'like', `%${word}%`)
+          })
+          .orWhere((builder) => {
+            for (const word of searchWords) builder.orWhere('court.name', 'like', `%${word}%`)
+          })
+          .orWhere((builder) => {
+            for (const word of searchWords) builder.orWhere('products.name', 'like', `%${word}%`)
+          })
+          .orWhere((builder) => {
+            for (const word of searchWords) builder.orWhere('products.sku', 'like', `%${word}%`)
+          })
+          .orWhere((builder) => {
+            for (const word of searchWords) builder.orWhere('products.description', 'like', `%${word}%`)
+          })
+        const subquery = productQuery.clone()
+        countQuery = countQuery.from(subquery.as('results'))
+      }
       if (brand) {
         productQuery = productQuery.where('brand.id', Number(brand))
         countQuery = countQuery.where('brand_id', Number(brand))
@@ -50,8 +78,8 @@ class ProductService {
         countQuery = countQuery.leftJoinRelated('court').where('court.id', Number(court))
       }
 
-      const totalProducts = (await countQuery.count('products.id').as('count').first()) as { [key: string]: any }
-      const products = await productQuery.groupBy('products.id')
+      const totalProducts = (await countQuery.count('* as count').first()) as { [key: string]: any }
+      const products = await productQuery.limit(limitData).offset(offset).groupBy('products.id')
       const productData = products.map((product) => {
         const image = { image: `${baseUrl}/file/image/${product.image}` }
         return { ...product, ...image }
@@ -61,27 +89,32 @@ class ProductService {
         data: productData,
         current_page: pageData,
         per_page: limitData,
-        total: totalProducts['count(`products`.`id`)'],
-        last_page: Math.ceil(totalProducts['count(`products`.`id`)'] / limitData),
+        total: totalProducts['count'],
+        last_page: Math.ceil(totalProducts['count'] / limitData),
       }
     } catch (err: any) {
       throw new Error(err.message)
     }
   }
 
-  async getProduct(id: string | number, baseUrl: string) {
+  async getProduct(id: string | number, baseUrl: string, user: User) {
     try {
-      const product = await Product.query()
+      let productQuery = Product.query()
         .findById(id)
-        .withGraphFetched(
-          '[sizes(defaultSelects),gallery,colorways(default),brand(default),selling_currency,position(defaultSelects),type(defaultSelects),court(defaultSelects)]',
-        )
-        .withGraphFetched('[buying_currency]')
+        .withGraphFetched('[sizes(defaultSelects),gallery,colorways(default),brand(default),selling_currency]')
+        .withGraphFetched('[position(defaultSelects),type(defaultSelects),court(defaultSelects)]')
+      if (isAdmin(user)) {
+        productQuery = productQuery.withGraphFetched('[buying_currency]')
+      }
 
+      const product = await productQuery
       if (product) {
         product.gallery = product.gallery.map((g) => ({ ...g, image: `${baseUrl}/file/image/${g.image}` }))
+        const { buying_price, buying_currency_id, ...productData } = product
 
-        return { data: { ...product, image: `${baseUrl}/file/image/${product.image}` } }
+        const result = !isAdmin(user) ? productData : product
+
+        return { data: { ...result, image: `${baseUrl}/file/image/${product.image}` } }
       }
 
       return { status: 'error', message: 'Product not found' }
@@ -233,11 +266,17 @@ class ProductService {
 
   async updateProductGallery(productId: string | number, files: Express.Multer.File[]) {
     try {
-      await ProductGallery.query()
-        .delete()
-        .where({ product_id: Number(productId) })
+      const gallery = await ProductGallery.query().where({ product_id: Number(productId) })
+      if (gallery.length) {
+        gallery.forEach((g) => {
+          const filePath = path.join(__dirname, '..', 'resources', 'static', 'assets', 'uploads')
+          fs.unlink(filePath + '/' + g.image)
+        })
 
-      // files.forEach((file: Express.Multer.File) => fs.unlink(file.path))
+        await ProductGallery.query()
+          .delete()
+          .where({ product_id: Number(productId) })
+      }
 
       if (files.length) {
         const images = files.map((file: Express.Multer.File) => {

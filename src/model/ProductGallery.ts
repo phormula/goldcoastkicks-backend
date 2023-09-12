@@ -2,6 +2,12 @@ import { Model } from 'objection'
 import Product from '@model/Product'
 
 class ProductGallery extends Model {
+  id: number
+  product_id: number
+  image: string
+  created_at: string
+  updated_at: string
+
   static get tableName() {
     return 'product_gallery'
   }

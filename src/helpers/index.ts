@@ -1,3 +1,6 @@
+import Role from '@app/model/Role'
+import User from '@model/User'
+
 export { generateToken as generateTokenHelper, verifyToken } from '@app/helpers/token'
 
 export function protectedUser(userObj: { [key: string]: any }) {
@@ -16,4 +19,8 @@ export function getCommonIds(arr1: any[], arr2: any[]) {
 
 export function filterKey(arr: object[], key: string) {
   return arr.map((e) => ({ ...e, filter_key: key }))
+}
+
+export function isAdmin(user: User) {
+  return user && user.roles.map((role: Role) => role.key).some((r: string) => r === 'super-admin' || r === 'admin')
 }

@@ -16,8 +16,7 @@ class ProductController {
   async getProduct(req: Request, res: Response, next: NextFunction) {
     try {
       const baseUrl = `${req.protocol}://${req.get('host')}`
-      const product = await ProductService.getProduct(req.params.id, baseUrl)
-
+      const product = await ProductService.getProduct(req.params.id, baseUrl, req.user as any)
       if (product.status === 'error') {
         return res.status(404).send(product)
       }

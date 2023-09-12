@@ -4,6 +4,7 @@ import Order from '@model/Order'
 import OrderStatus from '@model/OrderStatus'
 import Role from '@model/Role'
 import User from '@app/model/User'
+import { isAdmin } from '@app/helpers'
 
 class OrderController {
   async getAllOrders(req: Request, res: Response, next: NextFunction) {
@@ -34,9 +35,7 @@ class OrderController {
 
       let countQuery = Order.query()
 
-      const isAdmin = user.roles.map((role: Role) => role.key).some((r: string) => r === 'super-admin' || r === 'admin')
-
-      if (!isAdmin) {
+      if (!isAdmin(user)) {
         orderQuery = orderQuery.where('user_id', Number(user.id))
         countQuery = countQuery.where('user_id', Number(user.id))
       }
@@ -64,9 +63,7 @@ class OrderController {
 
       const user = req.user as User
 
-      const isAdmin = user.roles.map((role: Role) => role.key).some((r: string) => r === 'super-admin' || r === 'admin')
-
-      if (order && (isAdmin || order.user.id === user.id)) {
+      if (order && (isAdmin(user) || order.user.id === user.id)) {
         return res.send({ data: { ...order } })
       }
       return res.status(404).send({ status: 'error', message: 'Order not found' })
