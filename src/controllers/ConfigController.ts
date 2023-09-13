@@ -30,9 +30,9 @@ class ConfigController {
       const { key } = req.query
       const result = await Config.query().where({ key }).first()
 
-      if (result) return res.send({ data: result })
+      if (result) return res.status(200).send({ data: result })
 
-      return next(createHttpError(404, 'Config not found'))
+      return res.status(404).send({ data: { status: 'error', message: 'Config not found' } })
     } catch (error) {
       return next(error)
     }

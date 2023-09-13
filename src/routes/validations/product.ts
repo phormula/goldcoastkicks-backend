@@ -1,4 +1,4 @@
-import { body } from 'express-validator'
+import { body, query } from 'express-validator'
 import path from 'path'
 
 class ProductValidations {
@@ -85,6 +85,8 @@ class ProductValidations {
       return true
     }),
   ]
+
+  filterRules = [query('key').equals('price_filter').exists()]
 }
 
 export default new ProductValidations()

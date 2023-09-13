@@ -3,10 +3,12 @@ import { isAdmin, isAuthenticated, validate } from '@app/middleware'
 import ProductController from '@app/controllers/ProductController'
 import ProductValidations from '@routes/validations/product'
 import { upload } from '@app/middleware/upload'
+import ConfigController from '@app/controllers/ConfigController'
 
 const router = Router()
 
 router.route('/').get(ProductController.getAllProducts)
+router.route('/price-filter').get(ProductValidations.filterRules, ConfigController.getConfigByKey)
 router.route('/prefilters').get(ProductController.prefilters)
 
 router.route('/:id').get(ProductController.getProduct)
