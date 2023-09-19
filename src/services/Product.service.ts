@@ -1,6 +1,6 @@
 import fs from 'fs/promises'
 import path from 'path'
-import { filterKey } from '@app/helpers'
+import { filterKey, modelId } from '@app/helpers'
 import db from '@app/database/knexdb'
 import Product from '@model/Product'
 import Brand from '@model/Brand'
@@ -10,6 +10,7 @@ import Type from '@model/Type'
 import ProductGallery from '@model/ProductGallery'
 import User from '@model/User'
 import { isAdmin } from '@app/helpers'
+import ProductFinancial from '@app/model/ProductFinancial'
 
 class ProductService {
   async getAllProducts(requestQuery: { [key: string]: any }, baseUrl: string) {
@@ -101,15 +102,16 @@ class ProductService {
     try {
       let productQuery = Product.query()
         .findById(id)
-        .withGraphFetched('[sizes(defaultSelects),gallery,colorways(default),brand(default),selling_currency]')
+        .withGraphFetched('[sizes(defaultSelects),colorways(default),brand(default),selling_currency]')
         .withGraphFetched('[position(defaultSelects),type(defaultSelects),court(defaultSelects)]')
       if (isAdmin(user)) {
-        productQuery = productQuery.withGraphFetched('[buying_currency]')
+        productQuery = productQuery.withGraphFetched('[buying_currency,financial]')
       }
 
       const product = await productQuery
       if (product) {
-        product.gallery = product.gallery.map((g) => ({ ...g, image: `${baseUrl}/file/image/${g.image}` }))
+        const gallery = await ProductGallery.query().where({ product_id: id }).withGraphFetched('[color]')
+        product.gallery = gallery.map((g) => ({ ...g, image: `${baseUrl}/file/image/${g.image}` }))
         const { buying_price, buying_currency_id, ...productData } = product
 
         const result = !isAdmin(user) ? productData : product
@@ -129,6 +131,7 @@ class ProductService {
         name,
         description,
         sku,
+        weight,
         sizes,
         buying_price,
         selling_price,
@@ -147,14 +150,15 @@ class ProductService {
             name,
             description,
             sku,
+            weight,
             image,
             buying_price,
             selling_price,
-            position: position.map((s: any) => ({ id: s })),
-            type: type.map((s: any) => ({ id: s })),
-            court: court.map((s: any) => ({ id: s })),
-            sizes: sizes.map((s: any) => ({ id: s })),
-            colorways: colorways.map((c: any) => ({ id: c })),
+            position: modelId(position),
+            type: modelId(type),
+            court: modelId(court),
+            sizes: modelId(sizes),
+            colorways: modelId(colorways),
             buying_currency: { id: buying_currency_id },
             selling_currency: { id: selling_currency_id },
             ...(brand ? { brand: [{ id: brand }] } : {}),
@@ -186,6 +190,7 @@ class ProductService {
         name,
         description,
         sku,
+        weight,
         sizes,
         buying_price,
         selling_price,
@@ -197,6 +202,7 @@ class ProductService {
         court,
         colorways,
       } = data
+      console.log(data)
       const image = file && file.path.split('/').at(-1)
       const updateProduct = await Product.query().upsertGraph(
         {
@@ -204,17 +210,18 @@ class ProductService {
           name,
           description,
           sku,
+          weight,
           ...(image && { image }),
           buying_price,
           selling_price,
           buying_currency: { id: buying_currency_id },
           selling_currency: { id: selling_currency_id },
-          sizes: sizes.map((s: any) => ({ id: s })),
-          colorways: colorways.map((c: any) => ({ id: c })),
+          sizes: modelId(sizes),
+          colorways: modelId(colorways),
           brand: [{ id: brand }],
-          position: position.map((s: any) => ({ id: s })),
-          type: type.map((s: any) => ({ id: s })),
-          court: court.map((s: any) => ({ id: s })),
+          position: modelId(position),
+          type: modelId(type),
+          court: modelId(court),
         },
         {
           relate: true,
@@ -246,14 +253,14 @@ class ProductService {
     }
   }
 
-  async createProductGallery(productId: string | number, files: Express.Multer.File[]) {
+  async createProductGallery(productId: string | number, files: Express.Multer.File[], colors: any[]) {
     try {
       if (files) {
-        const images = files.map((file: Express.Multer.File) => {
-          return { product_id: Number(productId), image: file.path.split('/').at(-1) }
+        const images = files.map((file: Express.Multer.File, index) => {
+          return { product_id: Number(productId), image: file.path.split('/').at(-1), color: { id: colors[index] } }
         })
 
-        await db('product_gallery').insert(images, ['image'])
+        await ProductGallery.query().insertGraph(images, { relate: ['color'] })
 
         return { data: { status: 'success', message: 'Product gallery added successfully' } }
       }
@@ -264,7 +271,7 @@ class ProductService {
     }
   }
 
-  async updateProductGallery(productId: string | number, files: Express.Multer.File[]) {
+  async updateProductGallery(productId: string | number, files: Express.Multer.File[], colors: any[]) {
     try {
       const gallery = await ProductGallery.query().where({ product_id: Number(productId) })
       if (gallery.length) {
@@ -279,13 +286,45 @@ class ProductService {
       }
 
       if (files.length) {
-        const images = files.map((file: Express.Multer.File) => {
-          return { product_id: Number(productId), image: file.path.split('/').at(-1) }
+        const images = files.map((file: Express.Multer.File, index) => {
+          return { product_id: Number(productId), image: file.path.split('/').at(-1), color: { id: colors[index] } }
         })
         await db('product_gallery').insert(images, ['image'])
       }
 
       return { data: { status: 'success', message: 'Product gallery updated successfully' } }
+    } catch (err: any) {
+      throw new Error(err.message)
+    }
+  }
+
+  async createProductFinancial(productId: string | number, profit_percent: string, tax_percent: string) {
+    try {
+      const financial = await ProductFinancial.query().insertGraph(
+        { product: [{ id: Number(productId) }], profit_percent, tax_percent },
+        { relate: ['product'] },
+      )
+      if (financial) {
+        return { data: { status: 'success', message: 'Product financial added successfully' } }
+      }
+
+      return { data: { status: 'error', message: 'Error adding product financial!' } }
+    } catch (err: any) {
+      throw new Error(err.message)
+    }
+  }
+
+  async updateProductFinancial(productId: string | number, profit_percent: string, tax_percent: string) {
+    try {
+      const financial = await ProductFinancial.query()
+        .update({ profit_percent, tax_percent })
+        .where({ product_id: Number(productId) })
+
+      if (financial) {
+        return { data: { status: 'success', message: 'Product financial updated successfully' } }
+      }
+
+      return { data: { status: 'error', message: 'Product financial was not updated' } }
     } catch (err: any) {
       throw new Error(err.message)
     }

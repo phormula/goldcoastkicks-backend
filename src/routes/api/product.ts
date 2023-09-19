@@ -51,4 +51,20 @@ router.put(
   ProductController.updateProductGallery,
 )
 
+router.post(
+  '/financial/create',
+  isAuthenticated,
+  isAdmin,
+  validate(ProductValidations.createFinancialRules),
+  ProductController.createProductFinancial,
+)
+
+router.put(
+  '/financial/update',
+  isAuthenticated,
+  isAdmin,
+  validate(ProductValidations.updateFinancialRules),
+  ProductController.updateProductFinancial,
+)
+
 export default router

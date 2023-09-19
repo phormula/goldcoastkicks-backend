@@ -24,3 +24,7 @@ export function filterKey(arr: object[], key: string) {
 export function isAdmin(user: User) {
   return user && user.roles.map((role: Role) => role.key).some((r: string) => r === 'super-admin' || r === 'admin')
 }
+
+export function modelId(model: any[]) {
+  return model.map((m: any) => ({ id: Number(m) }))
+}

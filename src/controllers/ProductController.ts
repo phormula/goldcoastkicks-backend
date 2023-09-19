@@ -64,9 +64,9 @@ class ProductController {
 
   async createProductGallery(req: Request, res: Response, next: NextFunction) {
     try {
-      const { productId } = req.body
+      const { productId, colors } = req.body
       const files = req.files as Express.Multer.File[]
-      const result = await ProductService.createProductGallery(productId, files)
+      const result = await ProductService.createProductGallery(productId, files, colors)
 
       if (result.data.status === 'error') {
         return res.status(400).json(result)
@@ -80,9 +80,39 @@ class ProductController {
 
   async updateProductGallery(req: Request, res: Response, next: NextFunction) {
     try {
-      const { productId } = req.body
+      const { productId, colors } = req.body
       const files = req.files as Express.Multer.File[]
-      const result = await ProductService.updateProductGallery(productId, files)
+      const result = await ProductService.updateProductGallery(productId, files, colors)
+
+      if (result.data.status === 'error') {
+        return res.status(400).json(result)
+      }
+
+      return res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async createProductFinancial(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { productId, profit_percent, tax_percent } = req.body
+      const result = await ProductService.createProductFinancial(productId, profit_percent, tax_percent)
+
+      if (result.data.status === 'error') {
+        return res.status(400).json(result)
+      }
+
+      return res.status(201).json(result)
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async updateProductFinancial(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { productId, profit_percent, tax_percent } = req.body
+      const result = await ProductService.updateProductFinancial(productId, profit_percent, tax_percent)
 
       if (result.data.status === 'error') {
         return res.status(400).json(result)

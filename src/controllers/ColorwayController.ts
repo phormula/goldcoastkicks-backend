@@ -27,11 +27,33 @@ class ColorwayController {
 
   async createColorway(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, description } = req.body
+      const { name, color_code, darkness, description } = req.body
+      let color = await Colorway.query().findOne({ color_code })
 
-      const colorway = await Colorway.query().insert({ name, description })
+      if (!color) {
+        color = await Colorway.query().insert({ name, color_code, darkness, description })
+      }
 
-      return res.status(201).json({ data: colorway })
+      return res.status(201).json({ data: color })
+    } catch (error) {
+      return next(error)
+    }
+  }
+
+  async createBulkColorway(req: Request, res: Response, next: NextFunction) {
+    const { colors } = req.body
+    const colorways: Colorway[] = []
+
+    try {
+      for (const color of colors) {
+        let result = await Colorway.query().findOne({ color_code: color.color_code })
+
+        if (!result) {
+          result = await Colorway.query().insert(color)
+        }
+        if (!colorways.some((c) => c.id === result?.id)) colorways.push(result)
+      }
+      return res.status(201).json({ data: colorways })
     } catch (error) {
       return next(error)
     }

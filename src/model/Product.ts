@@ -7,12 +7,14 @@ import Currency from '@model/Currency'
 import Position from '@model/Position'
 import Type from '@model/Type'
 import Court from '@model/Court'
+import ProductFinancial from '@model/ProductFinancial'
 
 class Product extends Model {
   id: number | string
   name: string
   description: string
   sku: string
+  weight: string
   image: string
   buying_price: string
   buying_currency_id: string | number
@@ -123,6 +125,14 @@ class Product extends Model {
         join: {
           from: 'products.selling_currency_id',
           to: 'currencies.id',
+        },
+      },
+      financial: {
+        relation: Model.HasOneRelation,
+        modelClass: ProductFinancial,
+        join: {
+          from: 'products.id',
+          to: 'product_financials.product_id',
         },
       },
     }

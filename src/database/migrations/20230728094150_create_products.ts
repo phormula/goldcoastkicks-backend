@@ -27,6 +27,7 @@ export function up(knex: Knex) {
       table.integer('buying_currency_id').unsigned().references('id').inTable('currencies').onDelete('CASCADE')
       table.integer('selling_currency_id').unsigned().references('id').inTable('currencies').onDelete('CASCADE')
       table.string('sku', 255).unique()
+      table.string('weight', 255)
       table.string('image', 255)
       table.integer('brand_id', 255).nullable().unsigned().references('id').inTable('brands').onDelete('CASCADE')
       table.timestamp('created_at').defaultTo(knex.fn.now())

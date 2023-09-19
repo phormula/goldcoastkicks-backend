@@ -21,4 +21,12 @@ router.post(
   ColorwayController.createColorway,
 )
 
+router.post(
+  '/create-bulk',
+  isAuthenticated,
+  isAdmin,
+  validate(ColorwayValidations.createBulkRules),
+  ColorwayController.createBulkColorway,
+)
+
 export default router

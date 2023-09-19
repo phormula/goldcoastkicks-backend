@@ -9,6 +9,8 @@ export async function seed(knex: Knex): Promise<void> {
   await knex('configs').insert([
     { key: 'buying_currency', value: 'cny', table_name: 'currencies' },
     { key: 'selling_currency', value: 'ghc', table_name: 'currencies' },
+    { key: 'profit_percent', value: '1', table_name: 'product_financials' },
+    { key: 'tax_percent', value: '1', table_name: 'product_financials' },
   ])
 
   const currencies = await CurrencyConverterService.getCurrucies()

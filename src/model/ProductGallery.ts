@@ -1,5 +1,6 @@
 import { Model } from 'objection'
 import Product from '@model/Product'
+import Colorway from './Colorway'
 
 class ProductGallery extends Model {
   id: number
@@ -32,6 +33,14 @@ class ProductGallery extends Model {
         join: {
           from: 'product_gallery.product_id',
           to: 'products.id',
+        },
+      },
+      color: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Colorway,
+        join: {
+          from: 'product_gallery.colorway_id',
+          to: 'colorways.id',
         },
       },
     }
