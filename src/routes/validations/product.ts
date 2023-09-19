@@ -34,12 +34,12 @@ class ProductValidations {
 
   imgRules(key: string = 'image', optional = false) {
     let rule
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
     if (key === 'image') {
       rule = body(key).custom((value, { req }) => {
         if (!req.file) {
           throw new Error('Image field is required.')
         }
-        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
         const fileExtension = path.extname(req.file.originalname).toLowerCase()
         if (!allowedExtensions.includes(fileExtension)) {
           throw new Error('Uploaded file is not an image.')
@@ -51,7 +51,6 @@ class ProductValidations {
         if (!req.files) {
           throw new Error('Image field is required.')
         }
-        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']
         req.files.forEach((image: any) => {
           const fileExtension = path.extname(image.originalname).toLowerCase()
           if (!allowedExtensions.includes(fileExtension)) {

@@ -287,7 +287,11 @@ class ProductService {
 
       if (files.length) {
         const images = files.map((file: Express.Multer.File, index) => {
-          return { product_id: Number(productId), image: file.path.split('/').at(-1), color: { id: colors[index] } }
+          return {
+            product_id: Number(productId),
+            image: file.path.split('/').at(-1),
+            colorway_id: Number(colors[index]),
+          }
         })
         await db('product_gallery').insert(images, ['image'])
       }
