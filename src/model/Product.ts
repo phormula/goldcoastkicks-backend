@@ -20,8 +20,8 @@ class Product extends Model {
   buying_currency_id: string | number
   selling_price: string
   sizes: any[]
-  brand: any[]
-  colorways: any[]
+  brand: any
+  colorway: any
   gallery: any[]
   buying_currency: any
   selling_currency: any
@@ -63,16 +63,12 @@ class Product extends Model {
           to: 'products.brand_id',
         },
       },
-      colorways: {
-        relation: Model.ManyToManyRelation,
+      colorway: {
+        relation: Model.BelongsToOneRelation,
         modelClass: Colorway,
         join: {
-          from: 'products.id',
-          through: {
-            from: 'product_colorways.product_id',
-            to: 'product_colorways.colorway_id',
-          },
-          to: 'colorways.id',
+          from: 'colorways.id',
+          to: 'products.colorway_id',
         },
       },
       position: {

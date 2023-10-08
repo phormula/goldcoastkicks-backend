@@ -81,6 +81,7 @@ class ProductController {
   async updateProductGallery(req: Request, res: Response, next: NextFunction) {
     try {
       const { productId, colors } = req.body
+      console.log(req.files?.length)
       const files = req.files as Express.Multer.File[]
       const result = await ProductService.updateProductGallery(productId, files, colors)
 

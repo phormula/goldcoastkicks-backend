@@ -18,19 +18,19 @@ class Colorway extends Model {
     },
   }
 
-  static get jsonSchema() {
-    return {
-      type: 'object',
-      required: ['name', 'color_code'],
-      properties: {
-        id: { type: 'integer' },
-        name: { type: 'string' },
-        color_code: { type: 'string' },
-        darkness: { type: 'string' },
-        description: { type: 'string' },
-      },
-    }
-  }
+  // static get jsonSchema() {
+  //   return {
+  //     type: 'object',
+  //     required: ['name', 'color_code'],
+  //     properties: {
+  //       id: { type: 'integer' },
+  //       name: { type: 'string' },
+  //       color_code: { type: 'string' },
+  //       darkness: { type: 'string' },
+  //       description: { type: 'string' },
+  //     },
+  //   }
+  // }
 
   static get relationMappings() {
     return {

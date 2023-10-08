@@ -28,6 +28,7 @@ class ProductService {
           'selling_currency.code as currency_code',
         )
         .leftJoinRelated('brand')
+        .leftJoinRelated('colorway')
         .leftJoinRelated('position')
         .leftJoinRelated('type')
         .leftJoinRelated('court')
@@ -102,7 +103,7 @@ class ProductService {
     try {
       let productQuery = Product.query()
         .findById(id)
-        .withGraphFetched('[sizes(defaultSelects),colorways(default),brand(default),selling_currency]')
+        .withGraphFetched('[sizes(defaultSelects),colorway(default),brand(default),selling_currency]')
         .withGraphFetched('[position(defaultSelects),type(defaultSelects),court(defaultSelects)]')
       if (isAdmin(user)) {
         productQuery = productQuery.withGraphFetched('[buying_currency,financial]')
@@ -141,8 +142,9 @@ class ProductService {
         position,
         type,
         court,
-        colorways,
+        colorway,
       } = data
+      console.log(data)
       const image = file?.path.split('/').at(-1)
       const [product] = await Product.query().insertGraph(
         [
@@ -154,27 +156,18 @@ class ProductService {
             image,
             buying_price,
             selling_price,
+            brand: { id: Number(brand) },
+            colorway: { id: Number(colorway) },
+            buying_currency: { id: buying_currency_id },
+            selling_currency: { id: selling_currency_id },
+            sizes: modelId(sizes),
             position: modelId(position),
             type: modelId(type),
             court: modelId(court),
-            sizes: modelId(sizes),
-            colorways: modelId(colorways),
-            buying_currency: { id: buying_currency_id },
-            selling_currency: { id: selling_currency_id },
-            ...(brand ? { brand: [{ id: brand }] } : {}),
           },
         ],
         {
-          relate: [
-            'position',
-            'type',
-            'court',
-            'sizes',
-            'colorways',
-            'buying_currency',
-            'selling_currency',
-            ...(brand ? ['brand'] : []),
-          ],
+          relate: ['position', 'type', 'court', 'sizes', 'colorway', 'buying_currency', 'selling_currency', 'brand'],
         },
       )
 
@@ -200,7 +193,7 @@ class ProductService {
         position,
         type,
         court,
-        colorways,
+        colorway,
       } = data
       console.log(data)
       const image = file && file.path.split('/').at(-1)
@@ -214,11 +207,11 @@ class ProductService {
           ...(image && { image }),
           buying_price,
           selling_price,
+          colorway: { id: colorway },
+          brand: { id: brand },
           buying_currency: { id: buying_currency_id },
           selling_currency: { id: selling_currency_id },
           sizes: modelId(sizes),
-          colorways: modelId(colorways),
-          brand: [{ id: brand }],
           position: modelId(position),
           type: modelId(type),
           court: modelId(court),
@@ -237,11 +230,15 @@ class ProductService {
 
   async deleteProduct(id: string | number) {
     try {
-      const product = await Product.query().findById(id)
+      const product = await Product.query().findById(Number(id))
 
       if (product) {
         await product.$relatedQuery('sizes').unrelate()
-        await product.$relatedQuery('colorways').unrelate()
+        await product.$relatedQuery('position').unrelate()
+        await product.$relatedQuery('type').unrelate()
+        await product.$relatedQuery('court').unrelate()
+        await product.$relatedQuery('gallery').delete()
+        await product.$relatedQuery('financial').delete()
         await product.$query().delete()
 
         return { data: { status: 'success', message: 'Product deleted successfully' } }
@@ -257,7 +254,11 @@ class ProductService {
     try {
       if (files) {
         const images = files.map((file: Express.Multer.File, index) => {
-          return { product_id: Number(productId), image: file.path.split('/').at(-1), color: { id: colors[index] } }
+          return {
+            product_id: Number(productId),
+            image: file.path.split('/').at(-1),
+            color: { id: Number(colors[index]) },
+          }
         })
 
         await ProductGallery.query().insertGraph(images, { relate: ['color'] })
@@ -275,7 +276,7 @@ class ProductService {
     try {
       const gallery = await ProductGallery.query().where({ product_id: Number(productId) })
       if (gallery.length) {
-        gallery.forEach((g) => {
+        gallery.forEach(async (g) => {
           const filePath = path.join(__dirname, '..', 'resources', 'static', 'assets', 'uploads')
           fs.unlink(filePath + '/' + g.image)
         })

@@ -26,9 +26,9 @@ class ProductValidations {
       body('selling_price').isDecimal().exists(),
       body('buying_currency_id').exists(),
       body('selling_currency_id').exists(),
-      body('sizes').exists().withMessage('sizes is required').isArray().withMessage('sizes is not array'),
-      body('colorways').exists().withMessage('colorways is required').isArray().withMessage('colorways is not array'),
+      body('colorway').exists(),
       body('brand').exists(),
+      body('sizes').exists().withMessage('sizes is required').isArray().withMessage('sizes is not array'),
     ]
   }
 
