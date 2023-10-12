@@ -24,6 +24,12 @@ class OrderValidations {
           if (!v.quantity) {
             throw new Error('line order quantity is required')
           }
+          if (!v.image) {
+            throw new Error('line order image is required')
+          }
+          if (!v.colorway_id) {
+            throw new Error('line order colorway_id is required')
+          }
         })
         return true
       }),

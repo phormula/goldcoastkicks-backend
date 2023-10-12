@@ -11,7 +11,16 @@ export async function seed(knex: any) {
       email: 'phormulabackup@gmail.com',
       password: hashSync('password', Number(process.env.SALT)),
     },
+    {
+      first_name: 'Julian',
+      last_name: 'Mantey',
+      email: 'manteyjulian@gmail.com',
+      password: hashSync('password', Number(process.env.SALT)),
+    },
   ])
   await knex('user_roles').del()
-  await knex('user_roles').insert([{ user_id: 1, role_id: 1 }])
+  await knex('user_roles').insert([
+    { user_id: 1, role_id: 1 },
+    { user_id: 2, role_id: 2 },
+  ])
 }
