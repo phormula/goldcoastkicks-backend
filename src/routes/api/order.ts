@@ -9,6 +9,6 @@ router.route('/').get(isAuthenticated, OrderController.getAllOrders)
 
 router.route('/:id').get(isAuthenticated, OrderController.getOrder)
 
-router.post('/create', isAuthenticated, isAdmin, validate(OrderValidations.createRules), OrderController.createOrder)
+router.post('/create', isAuthenticated, validate(OrderValidations.createRules), OrderController.createOrder)
 
 export default router

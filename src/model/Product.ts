@@ -28,6 +28,8 @@ class Product extends Model {
   position: any
   type: any
   court: any
+  min_price: number
+  max_price: number
 
   static get tableName() {
     return 'products'

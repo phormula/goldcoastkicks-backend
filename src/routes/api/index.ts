@@ -8,6 +8,7 @@ import productRouter from '@routes/api/product'
 import orderRouter from '@routes/api/order'
 import brandRouter from '@routes/api/brand'
 import colorwayRouter from '@routes/api/colorway'
+import shippingRouter from '@routes/api/shipping'
 import sizeRouter from '@routes/api/size'
 import courtRouter from '@routes/api/court'
 import positionRouter from '@routes/api/position'
@@ -31,6 +32,7 @@ router.use('/colorways', colorwayRouter)
 router.use('/configs', configRouter)
 router.use('/currencies', currencyRouter)
 router.use('/orders', orderRouter)
+router.use('/shipping', shippingRouter)
 router.use('/products', productRouter)
 router.use('/sizes', sizeRouter)
 

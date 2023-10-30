@@ -1,7 +1,8 @@
 import { body, query } from 'express-validator'
 
 class AuthValidations {
-  loginRules = [body('email').isEmail().exists(), body('password').exists()]
+  loginRules = [body('email').isEmail().exists(), body('password').exists(), body('is_mobile').optional()]
+  oAuthRules = [body('id_token').exists(), body('is_mobile').optional()]
 
   resetPasswordRequestRules = [body('email').isEmail().exists()]
 
@@ -16,7 +17,11 @@ class AuthValidations {
     body('password').isLength({ min: 6 }).exists(),
   ]
 
-  customerRegisterRules = [...this.#commonRegisterRules, body('role').isIn(['customer']).optional()]
+  customerRegisterRules = [
+    ...this.#commonRegisterRules,
+    body('role').isIn(['customer']).optional(),
+    body('is_mobile').optional(),
+  ]
 
   adminRegisterRules = [...this.#commonRegisterRules, body('role').isIn(['admin', 'customer']).exists()]
 

@@ -8,8 +8,9 @@ import ConfigController from '@app/controllers/ConfigController'
 const router = Router()
 
 router.route('/').get(ProductController.getAllProducts)
-router.route('/price-filter').get(ProductValidations.filterRules, ConfigController.getConfigByKey)
+// router.route('/price-filter').get(ProductValidations.filterRules, ConfigController.getConfigByKey)
 router.route('/prefilters').get(ProductController.prefilters)
+router.route('/price-filter').get(ProductController.priceFilter)
 
 router.route('/:id').get(ProductController.getProduct)
 

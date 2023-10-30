@@ -138,13 +138,13 @@ class ProductService {
         selling_price,
         buying_currency_id,
         selling_currency_id,
-        brand,
+        brand_id,
         position,
         type,
         court,
-        colorway,
+        colorway_id,
       } = data
-      console.log(data)
+
       const image = file?.path.split('/').at(-1)
       const [product] = await Product.query().insertGraph(
         [
@@ -156,8 +156,8 @@ class ProductService {
             image,
             buying_price,
             selling_price,
-            brand: { id: Number(brand) },
-            colorway: { id: Number(colorway) },
+            brand: { id: Number(brand_id) },
+            colorway: { id: Number(colorway_id) },
             buying_currency: { id: buying_currency_id },
             selling_currency: { id: selling_currency_id },
             sizes: modelId(sizes),
@@ -189,13 +189,13 @@ class ProductService {
         selling_price,
         buying_currency_id,
         selling_currency_id,
-        brand,
+        brand_id,
         position,
         type,
         court,
-        colorway,
+        colorway_id,
       } = data
-      console.log(data)
+
       const image = file && file.path.split('/').at(-1)
       const updateProduct = await Product.query().upsertGraph(
         {
@@ -207,8 +207,8 @@ class ProductService {
           ...(image && { image }),
           buying_price,
           selling_price,
-          colorway: { id: colorway },
-          brand: { id: brand },
+          colorway: { id: colorway_id },
+          brand: { id: brand_id },
           buying_currency: { id: buying_currency_id },
           selling_currency: { id: selling_currency_id },
           sizes: modelId(sizes),
@@ -350,6 +350,20 @@ class ProductService {
       ]
 
       return { data: filters }
+    } catch (err: any) {
+      throw new Error(err.message)
+    }
+  }
+
+  async priceFilter() {
+    try {
+      const minProduct = await Product.query().min('selling_price as min_price').first()
+      const maxProduct = await Product.query().max('selling_price as max_price').first()
+
+      const min = Math.floor(Number(minProduct?.min_price))
+      const max = Math.ceil(Number(maxProduct?.max_price))
+
+      return { data: { min, max } }
     } catch (err: any) {
       throw new Error(err.message)
     }

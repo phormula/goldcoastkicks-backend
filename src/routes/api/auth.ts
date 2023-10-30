@@ -10,7 +10,7 @@ router.post('/resetpass', validate(AuthValidations.resetPasswordRequestRules), A
 
 router.post('/register', validate(AuthValidations.customerRegisterRules), AuthController.register)
 
-router.post('/login-by-oauth', AuthController.loginByOauth)
+router.post('/login-by-oauth', validate(AuthValidations.oAuthRules), AuthController.loginByOauth)
 
 router
   .route('/me')

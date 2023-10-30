@@ -134,6 +134,16 @@ class ProductController {
       next(err)
     }
   }
+
+  async priceFilter(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await ProductService.priceFilter()
+
+      return res.status(200).json(result)
+    } catch (err) {
+      next(err)
+    }
+  }
 }
 
 export default new ProductController()

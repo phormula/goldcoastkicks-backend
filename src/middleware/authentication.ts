@@ -54,7 +54,7 @@ export async function authenticationMiddleware(req: Request, res: Response, next
           //   // Set response headers
           //   res.setHeader('RefreshToken', newRefreshToken)
           // }
-          const newToken = user.generateToken()
+          const newToken = user.generateToken(undefined)
           res.setHeader('Token', newToken)
         }
       } catch (err: any) {

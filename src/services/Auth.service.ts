@@ -16,7 +16,7 @@ class AuthService {
    */
   async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body
+      const { email, password, is_mobile } = req.body
 
       // Find user by email address
       const user = await User.query().findOne({ email }).withGraphJoined('roles(defaultSelects)')
@@ -30,7 +30,8 @@ class AuthService {
         return res.status(400).json({ message: 'Incorrect email or password!' })
       }
       // Generate and return token
-      const token = user.generateToken()
+      const expires = is_mobile ? undefined : '24h'
+      const token = user.generateToken(expires)
       const refreshToken = user.generateToken('2h')
       return res.status(200).json({ token, refreshToken, ...protectedUser(user) })
     } catch (err) {
@@ -120,8 +121,9 @@ class AuthService {
           relate: ['roles'],
         },
       )
+      const expires = data.is_mobile ? undefined : '24h'
       const registeredUser = await User.query().findById(user.id)
-      const token = registeredUser?.generateToken()
+      const token = registeredUser?.generateToken(expires)
 
       const mailTemplate = await Mail.query().select('subject', 'text', 'html').findOne({ type: 'register' })
       await registeredUser?.sendMail(mailTemplate)

@@ -22,7 +22,7 @@ class User extends Model {
     },
   }
 
-  generateToken(expiresIn = '24h') {
+  generateToken(expiresIn: string | undefined) {
     const data = { id: this.id, email: this.email }
     return generateTokenHelper(data, expiresIn)
   }

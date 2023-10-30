@@ -2,6 +2,11 @@ import { Model } from 'objection'
 import ExchangeRate from '@model/ExchangeRate'
 
 class Currency extends Model {
+  id: number
+  name: string
+  symbol: string
+  code: string
+
   static get tableName() {
     return 'currencies'
   }

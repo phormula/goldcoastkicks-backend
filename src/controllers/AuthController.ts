@@ -17,7 +17,7 @@ class AuthController {
    */
   async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body
+      const { email, password, is_mobile } = req.body
 
       // Find user by email address
       const user = await User.query().findOne({ email }).withGraphJoined('roles(defaultSelects)')
@@ -31,8 +31,9 @@ class AuthController {
         return res.status(400).json({ message: 'Incorrect email or password!' })
       }
       // Generate and return token
-      const token = user.generateToken()
-      const refreshToken = user.generateToken('2h')
+      const expires = is_mobile ? undefined : '24h'
+      const token = user.generateToken(expires)
+      const refreshToken = user.generateToken(expires)
       return res.status(200).json({ data: { token, refreshToken, ...protectedUser(user) } })
     } catch (err) {
       return next(err)
@@ -42,7 +43,7 @@ class AuthController {
   async loginByOauth(req: Request, res: Response, next: NextFunction) {
     try {
       // User is authenticated, you can generate an access token here
-      const { id_token } = req.body
+      const { id_token, is_mobile } = req.body
       const oAuthUser = await OAuthService.verifyGoogleToken(id_token)
 
       if (oAuthUser) {
@@ -53,6 +54,7 @@ class AuthController {
             last_name: oAuthUser.family_name,
             email: oAuthUser.email,
             role: 'customer',
+            is_mobile,
           }
 
           const user = await AuthService.register(userData)
@@ -61,8 +63,9 @@ class AuthController {
         }
 
         // Generate and return token
-        const userToken = user.generateToken()
-        const refreshToken = user.generateToken('2h')
+        const expires = is_mobile ? undefined : '24h'
+        const userToken = user.generateToken(expires)
+        const refreshToken = user.generateToken(expires)
         return res.status(200).json({ data: { token: userToken, refreshToken, ...protectedUser(user) } })
       }
 
@@ -109,8 +112,8 @@ class AuthController {
         .update({ password: hashSync(newPassword, Number(process.env.SALT)) })
         .where('id', tokenData.id)
       const user = await User.query().findById(tokenData.id)
-      console.log(updateUser)
-      console.log(user)
+      // console.log(updateUser)
+      // console.log(user)
       if (!updateUser) {
         return next(createHttpError(400, 'There is no user with this email address!'))
       }
@@ -134,7 +137,7 @@ class AuthController {
    */
   async register(req: Request, res: Response, next: NextFunction) {
     try {
-      const { first_name, last_name, email, password } = req.body
+      const { first_name, last_name, email, password, is_mobile } = req.body
       const roleName = req.body.role || 'customer'
       const data = {
         first_name,
@@ -142,6 +145,7 @@ class AuthController {
         email,
         password: hashSync(password, Number(process.env.SALT)),
         role: roleName,
+        is_mobile,
       }
 
       const registeredUser = await AuthService.register(data)
@@ -210,7 +214,7 @@ class AuthController {
       }
 
       // Update password
-      user.password = password
+      user.password = hashSync(password, Number(process.env.SALT))
       await user.save()
 
       return res.json({ success: true })

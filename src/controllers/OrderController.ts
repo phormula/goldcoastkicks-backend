@@ -24,7 +24,7 @@ class OrderController {
           'user.email as user_email',
           'user.first_name as user_first_name',
           'user.last_name as user_last_name',
-          Order.relatedQuery('detail').sum('price').as('total_price'),
+          Order.relatedQuery('detail').select(Order.raw('SUM(price * quantity)')).as('total_price'),
         )
         .leftJoinRelated('status')
         .leftJoinRelated('user')

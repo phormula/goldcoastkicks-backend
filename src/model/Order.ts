@@ -2,6 +2,7 @@ import { Model } from 'objection'
 import OrderItem from '@model/OrderItem'
 import OrderStatus from '@model/OrderStatus'
 import User from '@model/User'
+import Shipping from '@model/Shipping'
 
 class Order extends Model {
   id: number | string
@@ -9,6 +10,7 @@ class Order extends Model {
   detail: any[]
   status: any[]
   user: User
+  shipping: Shipping
 
   static get tableName() {
     return 'orders'
@@ -38,6 +40,14 @@ class Order extends Model {
         join: {
           from: 'orders.user_id',
           to: 'users.id',
+        },
+      },
+      shipping: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Shipping,
+        join: {
+          from: 'orders.shipping_id',
+          to: 'shipping.id',
         },
       },
     }
