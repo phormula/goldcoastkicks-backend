@@ -208,7 +208,7 @@ class ProductService {
           buying_price,
           selling_price,
           colorway: { id: colorway_id },
-          brand: { id: brand_id },
+          brand: { id: Number(brand_id) },
           buying_currency: { id: buying_currency_id },
           selling_currency: { id: selling_currency_id },
           sizes: modelId(sizes),

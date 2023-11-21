@@ -2,6 +2,10 @@ import { Model } from 'objection'
 import Product from '@model/Product'
 
 class Brand extends Model {
+  name: string
+  image: string
+  description: string
+
   static get tableName() {
     return 'brands'
   }

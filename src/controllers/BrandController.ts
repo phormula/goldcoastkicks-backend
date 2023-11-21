@@ -5,9 +5,14 @@ import createHttpError from 'http-errors'
 class BrandController {
   async getAllBrands(req: Request, res: Response, next: NextFunction) {
     try {
+      const baseUrl = `${req.protocol}://${req.get('host')}`
       const brands = await Brand.query()
+      const brandData = brands.map((brand) => {
+        const image = brand.image ? { image: `${baseUrl}/file/image/${brand.image}` } : {}
+        return { ...brand, ...image }
+      })
 
-      return res.send({ data: brands })
+      return res.send({ data: brandData })
     } catch (err) {
       return next(err)
     }
@@ -15,10 +20,11 @@ class BrandController {
 
   async getBrand(req: Request, res: Response, next: NextFunction) {
     try {
+      const baseUrl = `${req.protocol}://${req.get('host')}`
       const result = await Brand.query().findById(req.params.id)
 
       if (result) {
-        return res.send({ data: result })
+        return res.send({ data: { ...result, image: `${baseUrl}/file/image/${result.image}` } })
       }
 
       return next(createHttpError(404, 'Brand not found'))
@@ -30,7 +36,8 @@ class BrandController {
   async createBrand(req: Request, res: Response, next: NextFunction) {
     try {
       const { name, description } = req.body
-      const brand = await Brand.query().insert({ name, description })
+      const image = req.file?.path.split('/').at(-1)
+      const brand = await Brand.query().insert({ name, description, image })
 
       return res.status(201).json({ data: brand })
     } catch (err) {
@@ -42,7 +49,8 @@ class BrandController {
     try {
       const brandId = req.params.id
       const { name, description } = req.body
-      const brand = await Brand.query().update({ name, description }).where({ id: brandId })
+      const image = req.file?.path.split('/').at(-1)
+      const brand = await Brand.query().update({ name, description, image }).where({ id: brandId })
 
       return res.status(200).json({ data: brand })
     } catch (error) {

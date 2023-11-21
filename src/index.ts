@@ -70,6 +70,9 @@ app.all('*', (req, res) => {
 app.use(errorHandler)
 
 if (process.env.NODE_ENV !== 'production') {
+  // createServer(app).listen(PORT, () => {
+  //   console.log(`Server running on port ${PORT}`)
+  // })
   _createServer(
     {
       key: readFileSync('key.pem'),
