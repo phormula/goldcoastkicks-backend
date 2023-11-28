@@ -1,6 +1,11 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 
-class Config extends Model {
+class Config extends ModelBase {
+  id: number
+  key: string
+  value: string
+  table_name: string
+
   static get tableName() {
     return 'configs'
   }

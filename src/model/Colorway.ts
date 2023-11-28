@@ -1,7 +1,7 @@
-import { Model, QueryBuilder } from 'objection'
+import ModelBase from '@model/ModelBase'
 import Product from '@model/Product'
 
-class Colorway extends Model {
+class Colorway extends ModelBase {
   id: number | string
   name: string
   color_code: string
@@ -35,7 +35,7 @@ class Colorway extends Model {
   static get relationMappings() {
     return {
       products: {
-        relation: Model.ManyToManyRelation,
+        relation: ModelBase.ManyToManyRelation,
         modelClass: Product,
         join: {
           from: 'coloways.id',

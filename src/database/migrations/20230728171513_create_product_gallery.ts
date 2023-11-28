@@ -5,6 +5,7 @@ export function up(knex: Knex) {
     table.increments('id')
     table.integer('product_id').unsigned()
     table.string('image', 255)
+    table.integer('colorway_id').unsigned().references('id').inTable('colorways').onDelete('CASCADE')
     table.timestamp('created_at').defaultTo(knex.fn.now())
     table.timestamp('updated_at').defaultTo(knex.fn.now())
 

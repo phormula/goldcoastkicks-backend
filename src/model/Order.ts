@@ -1,16 +1,22 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 import OrderItem from '@model/OrderItem'
 import OrderStatus from '@model/OrderStatus'
 import User from '@model/User'
 import Shipping from '@model/Shipping'
+import Currency from '@model/Currency'
 
-class Order extends Model {
+class Order extends ModelBase {
   id: number | string
+  user_id: number
   note: string
   detail: any[]
   status: any[]
+  order_status_id: number
   user: User
   shipping: Shipping
+  currency: Currency
+  shipping_amount: number
+  shipping_id: number
 
   static get tableName() {
     return 'orders'
@@ -19,7 +25,7 @@ class Order extends Model {
   static get relationMappings() {
     return {
       detail: {
-        relation: Model.HasManyRelation,
+        relation: ModelBase.HasManyRelation,
         modelClass: OrderItem,
         join: {
           from: 'orders.id',
@@ -27,7 +33,7 @@ class Order extends Model {
         },
       },
       status: {
-        relation: Model.BelongsToOneRelation,
+        relation: ModelBase.BelongsToOneRelation,
         modelClass: OrderStatus,
         join: {
           from: 'orders.order_status_id',
@@ -35,7 +41,7 @@ class Order extends Model {
         },
       },
       user: {
-        relation: Model.BelongsToOneRelation,
+        relation: ModelBase.BelongsToOneRelation,
         modelClass: User,
         join: {
           from: 'orders.user_id',
@@ -43,11 +49,19 @@ class Order extends Model {
         },
       },
       shipping: {
-        relation: Model.BelongsToOneRelation,
+        relation: ModelBase.BelongsToOneRelation,
         modelClass: Shipping,
         join: {
           from: 'orders.shipping_id',
           to: 'shipping.id',
+        },
+      },
+      currency: {
+        relation: ModelBase.BelongsToOneRelation,
+        modelClass: Currency,
+        join: {
+          from: 'orders.currency_id',
+          to: 'currencies.id',
         },
       },
     }

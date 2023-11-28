@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import { Request, Response, NextFunction } from 'express'
 import createHttpError from 'http-errors'
-import { hashSync } from 'bcrypt'
+import { hashSync } from 'bcryptjs'
 import { protectedUser, verifyToken } from '@app/helpers'
 import { JwtPayload } from 'jsonwebtoken'
 import User from '@model/User'

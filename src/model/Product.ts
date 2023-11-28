@@ -1,4 +1,4 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 import Size from '@model/Size'
 import Brand from '@model/Brand'
 import Colorway from '@model/Colorway'
@@ -9,7 +9,7 @@ import Type from '@model/Type'
 import Court from '@model/Court'
 import ProductFinancial from '@model/ProductFinancial'
 
-class Product extends Model {
+class Product extends ModelBase {
   id: number | string
   name: string
   description: string
@@ -19,6 +19,9 @@ class Product extends Model {
   buying_price: string
   buying_currency_id: string | number
   selling_price: string
+  profit_percent: number
+  tax: number
+  payment_fees: number
   sizes: any[]
   brand: any
   colorway: any
@@ -35,10 +38,29 @@ class Product extends Model {
     return 'products'
   }
 
+  static modifiers = {
+    customerSelect(query: any) {
+      query.select(
+        'id',
+        'name',
+        'description',
+        'sku',
+        'image',
+        'selling_currency_id',
+        'selling_price',
+        'weight',
+        'brand_id',
+        'colorway_id',
+        'created_at',
+        'updated_at',
+      )
+    },
+  }
+
   static get relationMappings() {
     return {
       sizes: {
-        relation: Model.ManyToManyRelation,
+        relation: ModelBase.ManyToManyRelation,
         modelClass: Size,
         join: {
           from: 'products.id',
@@ -50,7 +72,7 @@ class Product extends Model {
         },
       },
       gallery: {
-        relation: Model.HasManyRelation,
+        relation: ModelBase.HasManyRelation,
         modelClass: ProductGallery,
         join: {
           from: 'products.id',
@@ -58,7 +80,7 @@ class Product extends Model {
         },
       },
       brand: {
-        relation: Model.BelongsToOneRelation,
+        relation: ModelBase.BelongsToOneRelation,
         modelClass: Brand,
         join: {
           from: 'brands.id',
@@ -66,7 +88,7 @@ class Product extends Model {
         },
       },
       colorway: {
-        relation: Model.BelongsToOneRelation,
+        relation: ModelBase.BelongsToOneRelation,
         modelClass: Colorway,
         join: {
           from: 'colorways.id',
@@ -74,7 +96,7 @@ class Product extends Model {
         },
       },
       position: {
-        relation: Model.ManyToManyRelation,
+        relation: ModelBase.ManyToManyRelation,
         modelClass: Position,
         join: {
           from: 'products.id',
@@ -86,7 +108,7 @@ class Product extends Model {
         },
       },
       court: {
-        relation: Model.ManyToManyRelation,
+        relation: ModelBase.ManyToManyRelation,
         modelClass: Court,
         join: {
           from: 'products.id',
@@ -98,7 +120,7 @@ class Product extends Model {
         },
       },
       type: {
-        relation: Model.ManyToManyRelation,
+        relation: ModelBase.ManyToManyRelation,
         modelClass: Type,
         join: {
           from: 'products.id',
@@ -110,7 +132,7 @@ class Product extends Model {
         },
       },
       buying_currency: {
-        relation: Model.BelongsToOneRelation,
+        relation: ModelBase.BelongsToOneRelation,
         modelClass: Currency,
         join: {
           from: 'products.buying_currency_id',
@@ -118,7 +140,7 @@ class Product extends Model {
         },
       },
       selling_currency: {
-        relation: Model.BelongsToOneRelation,
+        relation: ModelBase.BelongsToOneRelation,
         modelClass: Currency,
         join: {
           from: 'products.selling_currency_id',
@@ -126,7 +148,7 @@ class Product extends Model {
         },
       },
       financial: {
-        relation: Model.HasOneRelation,
+        relation: ModelBase.HasOneRelation,
         modelClass: ProductFinancial,
         join: {
           from: 'products.id',

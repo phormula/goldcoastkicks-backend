@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { hashSync } from 'bcrypt'
+import { hashSync } from 'bcryptjs'
 
 export async function seed(knex: any) {
   // Deletes ALL existing entries

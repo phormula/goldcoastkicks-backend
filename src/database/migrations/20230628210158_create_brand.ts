@@ -5,6 +5,7 @@ export function up(knex: Knex) {
     table.increments('id')
     table.string('name', 255)
     table.text('description')
+    table.string('image')
     table.timestamp('created_at').defaultTo(knex.fn.now())
     table.timestamp('updated_at').defaultTo(knex.fn.now())
   })

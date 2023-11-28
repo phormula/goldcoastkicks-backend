@@ -1,7 +1,7 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 import ExchangeRate from '@model/ExchangeRate'
 
-class Currency extends Model {
+class Currency extends ModelBase {
   id: number
   name: string
   symbol: string
@@ -20,7 +20,7 @@ class Currency extends Model {
   static get relationMappings() {
     return {
       exchangeRatesFrom: {
-        relation: Model.HasManyRelation,
+        relation: ModelBase.HasManyRelation,
         modelClass: ExchangeRate,
         join: {
           from: 'currencies.id',
@@ -28,7 +28,7 @@ class Currency extends Model {
         },
       },
       exchangeRatesTo: {
-        relation: Model.HasManyRelation,
+        relation: ModelBase.HasManyRelation,
         modelClass: ExchangeRate,
         join: {
           from: 'currencies.id',

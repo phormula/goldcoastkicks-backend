@@ -1,6 +1,6 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 
-class Mail extends Model {
+class Mail extends ModelBase {
   static get tableName() {
     return 'mail_templates'
   }

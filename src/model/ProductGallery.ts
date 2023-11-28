@@ -1,14 +1,12 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 import Product from '@model/Product'
 import Colorway from './Colorway'
 
-class ProductGallery extends Model {
+class ProductGallery extends ModelBase {
   id: number
   product_id: number
   image: string
   colorway_id: number
-  created_at: string
-  updated_at: string
 
   static get tableName() {
     return 'product_gallery'
@@ -29,7 +27,7 @@ class ProductGallery extends Model {
   static get relationMappings() {
     return {
       product: {
-        relation: Model.BelongsToOneRelation,
+        relation: ModelBase.BelongsToOneRelation,
         modelClass: Product,
         join: {
           from: 'product_gallery.product_id',
@@ -37,7 +35,7 @@ class ProductGallery extends Model {
         },
       },
       color: {
-        relation: Model.BelongsToOneRelation,
+        relation: ModelBase.BelongsToOneRelation,
         modelClass: Colorway,
         join: {
           from: 'product_gallery.colorway_id',

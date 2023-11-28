@@ -1,10 +1,12 @@
-import { compare } from 'bcrypt'
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
+import { compare } from 'bcryptjs'
 import { generateTokenHelper } from '@app/helpers'
 import Role from '@app/model/Role'
 import MailService from '@app/services/Mail.service'
+import Mail from 'nodemailer/lib/mailer'
+import UserAddress from '@model/UserAddress'
 
-class User extends Model {
+class User extends ModelBase {
   id: number
   email: string
   password: string
@@ -24,6 +26,7 @@ class User extends Model {
 
   generateToken(expiresIn: string | undefined) {
     const data = { id: this.id, email: this.email }
+
     return generateTokenHelper(data, expiresIn)
   }
 
@@ -31,7 +34,7 @@ class User extends Model {
     return compare(plainPassword, this.password)
   }
 
-  sendMail(mail: any) {
+  sendMail(mail: Mail.Options) {
     const payload = {
       ...mail,
       to: `${this.first_name} ${this.last_name} <${this.email}>`,
@@ -77,7 +80,7 @@ class User extends Model {
   static get relationMappings() {
     return {
       roles: {
-        relation: Model.ManyToManyRelation,
+        relation: ModelBase.ManyToManyRelation,
         modelClass: Role,
         join: {
           from: 'users.id',
@@ -86,6 +89,14 @@ class User extends Model {
             to: 'user_roles.role_id',
           },
           to: 'roles.id',
+        },
+      },
+      detail: {
+        relation: ModelBase.HasManyRelation,
+        modelClass: UserAddress,
+        join: {
+          from: 'orders.id',
+          to: 'order_items.order_id',
         },
       },
     }

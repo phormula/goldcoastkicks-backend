@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import { Request, Response, NextFunction } from 'express'
 import createHttpError from 'http-errors'
-import { hashSync } from 'bcrypt'
+import { hashSync } from 'bcryptjs'
 import { protectedUser, verifyToken } from '@app/helpers'
 import { JwtPayload } from 'jsonwebtoken'
 import User from '@model/User'
@@ -126,7 +126,7 @@ class AuthService {
       const token = registeredUser?.generateToken(expires)
 
       const mailTemplate = await Mail.query().select('subject', 'text', 'html').findOne({ type: 'register' })
-      await registeredUser?.sendMail(mailTemplate)
+      await registeredUser?.sendMail(mailTemplate as any)
 
       return { token, ...protectedUser(registeredUser as { [key: string]: any }) }
     } catch (err: any) {

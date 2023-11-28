@@ -1,11 +1,13 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 import Currency from '@model/Currency'
 
-class Shipping extends Model {
+class Shipping extends ModelBase {
+  id: string | number
   name: string
   amount: number
   duration: string
-  currency: any
+  currency: Currency
+  currency_id: any
   static get tableName() {
     return 'shipping'
   }
@@ -13,7 +15,7 @@ class Shipping extends Model {
   static get relationMappings() {
     return {
       currency: {
-        relation: Model.BelongsToOneRelation,
+        relation: ModelBase.BelongsToOneRelation,
         modelClass: Currency,
         join: {
           from: 'shipping.currency_id',

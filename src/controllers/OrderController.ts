@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express'
-import createHttpError from 'http-errors'
+import { isAdmin } from '@app/helpers'
 import Order from '@model/Order'
 import OrderStatus from '@model/OrderStatus'
-import Role from '@model/Role'
 import User from '@app/model/User'
-import { isAdmin } from '@app/helpers'
+import MailService from '@app/services/Mail.service'
+import OrderItem from '@app/model/OrderItem'
 
 class OrderController {
   async getAllOrders(req: Request, res: Response, next: NextFunction) {
@@ -24,11 +24,18 @@ class OrderController {
           'user.email as user_email',
           'user.first_name as user_first_name',
           'user.last_name as user_last_name',
+          'currency.name as currency_name',
+          'currency.code as currency_code',
+          'currency.symbol as currency_symbol',
+          'shipping.name as shipping_name',
+          'shipping.duration as shipping_duration',
           Order.relatedQuery('detail').select(Order.raw('SUM(price * quantity)')).as('total_price'),
         )
         .leftJoinRelated('status')
         .leftJoinRelated('user')
         .leftJoinRelated('detail')
+        .leftJoinRelated('shipping')
+        .leftJoinRelated('currency')
         .groupBy('orders.id')
         .limit(limit)
         .offset(offset)
@@ -59,7 +66,7 @@ class OrderController {
     try {
       const order = await Order.query()
         .findById(req.params.id)
-        .withGraphFetched('[detail, status,user(defaultSelects)]')
+        .withGraphFetched('[detail.product(customerSelect), status, user(defaultSelects), shipping, currency]')
 
       const user = req.user as User
 
@@ -74,20 +81,21 @@ class OrderController {
 
   async createOrder(req: Request, res: Response, next: NextFunction) {
     try {
-      const { line_orders, note, user } = req.body
+      const { line_orders, note, user, shipping_id, shipping_amount, currency_id } = req.body
 
       const userOrdered = user || (req.user as User).id
       const orderStatus = await OrderStatus.query().findOne({ key: 'placed' })
       const order = await Order.query().upsertGraph(
-        [
-          {
-            note,
-            detail: line_orders,
-            status: [orderStatus],
-            user: { id: userOrdered },
-          },
-        ],
-        { relate: ['detail', 'status', 'user'] },
+        {
+          note,
+          shipping_amount,
+          detail: line_orders,
+          status: [orderStatus],
+          user: { id: userOrdered },
+          shipping: { id: Number(shipping_id) },
+          currency: { id: Number(currency_id) },
+        },
+        { relate: true },
       )
       res.status(201).json({ data: { order } })
 
@@ -98,23 +106,29 @@ class OrderController {
   }
 
   async updateOrder(req: Request, res: Response, next: NextFunction) {
-    // Update a product in the database based on the data from the request body
-    const orderId = req.params.id
-    const { line_orders, note, status } = req.body
-    const updateOrder = await Order.query().upsertGraph(
-      {
-        id: orderId,
+    try {
+      const orderId = req.params.id
+      const { line_orders, note, status, user_id, shipping_id, shipping_amount } = req.body
+      const updateOrder = await Order.query().updateAndFetchById(orderId, {
         note,
-        detail: line_orders,
-        status,
-      },
-      {
-        relate: true,
-        unrelate: true,
-      },
-    )
+        user_id,
+        order_status_id: status,
+        shipping_amount,
+        shipping_id: Number(shipping_id),
+      })
+      let updatedItems = []
+      for (let i = 0; i < line_orders.length; i++) {
+        const { id, ...item } = line_orders[i]
+        const updatedItem = await OrderItem.query().updateAndFetchById(id, item).where({ order_id: orderId })
+        updatedItems.push(updatedItem)
+      }
+      updateOrder.detail = updatedItems
 
-    return res.status(200).json({ data: { ...updateOrder } })
+      // MailService.sendMail({to:})
+      return res.status(200).json({ data: { ...updateOrder } })
+    } catch (error) {
+      return next(error)
+    }
   }
 
   async deleteOrder(req: Request, res: Response, next: NextFunction) {
@@ -129,9 +143,63 @@ class OrderController {
         return res.status(200).json({ data: { status: 'success', message: 'Order deleted successfully' } })
       }
 
-      return next(createHttpError(500, 'Error deleting order!'))
+      return res.status(500).json({ error: 'Error deleting order!' })
     } catch (err) {
       next(err)
+    }
+  }
+
+  async orderStatus(_req: Request, res: Response, next: NextFunction) {
+    try {
+      const orderStatus = await OrderStatus.query()
+
+      return res.send({ data: orderStatus })
+    } catch (err) {
+      return next(err)
+    }
+  }
+
+  async getOrderStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const orderStatus = await OrderStatus.query().findById(req.params.id)
+
+      return res.send({ data: { ...orderStatus } })
+    } catch (err) {
+      return next(err)
+    }
+  }
+
+  async createOrderStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { key, value, color, description } = req.body
+      const orderStatus = await OrderStatus.query().insert({ key, value, color, description })
+
+      return res.status(200).json({ data: orderStatus })
+    } catch (err) {
+      return next(err)
+    }
+  }
+
+  async updateOrderStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { key, value, color, description } = req.body
+      const orderStatus = await OrderStatus.query()
+        .update({ key, value, color, description })
+        .where({ id: req.params.id })
+
+      return res.status(200).json({ data: orderStatus })
+    } catch (err) {
+      return next(err)
+    }
+  }
+
+  async deleteOrderStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      await OrderStatus.query().findById(req.params.id).delete()
+
+      return res.status(200).json({ data: { status: 'success', message: 'Order status deleted successfully' } })
+    } catch (error) {
+      return next(error)
     }
   }
 }

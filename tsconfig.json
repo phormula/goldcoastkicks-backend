@@ -5,6 +5,7 @@
     "target": "esnext",
     "module": "commonjs",
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "strict": true,

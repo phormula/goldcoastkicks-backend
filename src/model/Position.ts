@@ -1,7 +1,11 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 import Product from '@model/Product'
 
-class Position extends Model {
+class Position extends ModelBase {
+  id: number
+  name: string
+  description: string
+
   static get tableName() {
     return 'positions'
   }
@@ -27,7 +31,7 @@ class Position extends Model {
   static get relationMappings() {
     return {
       users: {
-        relation: Model.ManyToManyRelation,
+        relation: ModelBase.ManyToManyRelation,
         modelClass: Product,
         join: {
           from: 'positions.id',

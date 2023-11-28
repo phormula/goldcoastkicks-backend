@@ -1,6 +1,12 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 
-class OrderStatus extends Model {
+class OrderStatus extends ModelBase {
+  id: number
+  key: string
+  value: string
+  color: string
+  description: string
+
   static get tableName() {
     return 'order_statuses'
   }

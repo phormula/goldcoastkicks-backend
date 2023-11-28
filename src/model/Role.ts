@@ -1,7 +1,7 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 import User from '@model/User'
 
-class Role extends Model {
+class Role extends ModelBase {
   key: string
   name: string
   description: string
@@ -31,7 +31,7 @@ class Role extends Model {
   static get relationMappings() {
     return {
       users: {
-        relation: Model.ManyToManyRelation,
+        relation: ModelBase.ManyToManyRelation,
         modelClass: User,
         join: {
           from: 'roles.id',

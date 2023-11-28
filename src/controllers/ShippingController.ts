@@ -49,7 +49,7 @@ class ShippingController {
       const currencyQuery = !Number.isNaN(Number(currency)) ? { id: Number(currency) } : { code: currency }
       const shippingCurrency = await Currency.query().where(currencyQuery).first()
       const shipping = await Shipping.query()
-        .update({ name, amount, duration, currency: shippingCurrency?.id })
+        .update({ name, amount, duration, currency_id: shippingCurrency?.id })
         .where({ id: shippingId })
 
       return res.status(200).json({ data: shipping })

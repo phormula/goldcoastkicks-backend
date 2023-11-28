@@ -1,6 +1,6 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 
-class Service extends Model {
+class Service extends ModelBase {
   static get tableName() {
     return 'services'
   }

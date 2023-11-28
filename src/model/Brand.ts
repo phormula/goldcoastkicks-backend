@@ -1,7 +1,7 @@
-import { Model } from 'objection'
+import ModelBase from '@model/ModelBase'
 import Product from '@model/Product'
 
-class Brand extends Model {
+class Brand extends ModelBase {
   name: string
   image: string
   description: string
@@ -31,7 +31,7 @@ class Brand extends Model {
   static get relationMappings() {
     return {
       product: {
-        relation: Model.HasManyRelation,
+        relation: ModelBase.HasManyRelation,
         modelClass: Product,
         join: {
           from: 'brands.id',

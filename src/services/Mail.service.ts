@@ -1,5 +1,6 @@
 import nodemailer, { TestAccount, createTestAccount, createTransport, getTestMessageUrl } from 'nodemailer'
 import LoggerService from '@app/services/Logger.service'
+import Mail from 'nodemailer/lib/mailer'
 
 class MailService {
   private transporter!: nodemailer.Transporter
@@ -57,7 +58,7 @@ class MailService {
     }
   }
 
-  async sendMail(mail: any) {
+  async sendMail(mail: Mail.Options) {
     // If there is no sender in payload, set default sender
     const payload = mail
     if (!payload.from) {

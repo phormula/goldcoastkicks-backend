@@ -4,7 +4,7 @@ import User from '@model/User'
 export { generateToken as generateTokenHelper, verifyToken } from '@app/helpers/token'
 
 export function protectedUser(userObj: { [key: string]: any }) {
-  const fields = ['password', 'email_verified_at', 'updated_at']
+  const fields = ['password', 'email_verified_at']
 
   fields.forEach((e) => {
     delete userObj[e]

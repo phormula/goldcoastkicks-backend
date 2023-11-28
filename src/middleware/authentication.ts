@@ -43,7 +43,6 @@ export async function authenticationMiddleware(req: Request, res: Response, next
         const exp = new Date((tokenData.exp || 1) * 1000)
         const difference = exp.getTime() - now.getTime()
         const minutes = Math.round(difference / 60000)
-
         if (minutes < 15) {
           // Verify refresh token and get refresh token data
           // const refreshTokenData = await verifyToken(refreshToken)
@@ -54,7 +53,7 @@ export async function authenticationMiddleware(req: Request, res: Response, next
           //   // Set response headers
           //   res.setHeader('RefreshToken', newRefreshToken)
           // }
-          const newToken = user.generateToken(undefined)
+          const newToken = user.generateToken('24h')
           res.setHeader('Token', newToken)
         }
       } catch (err: any) {

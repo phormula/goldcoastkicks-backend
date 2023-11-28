@@ -3,7 +3,6 @@ import dns from 'dns'
 dns.setDefaultResultOrder('ipv4first')
 import { createServer } from 'http'
 import { createServer as _createServer } from 'https'
-import { readFileSync } from 'fs'
 import express, { urlencoded } from 'express'
 import { join } from 'path'
 import cors from 'cors'
@@ -19,7 +18,7 @@ import errorHandler from '@app/middleware/errorHandler'
 import { authenticationMiddleware } from '@app/middleware'
 
 const app = express()
-const PORT = process.env.PORT || 3501
+const PORT = process.env.PORT || 50001
 
 // Initialize knex.
 Model.knex(db)
@@ -69,30 +68,24 @@ app.all('*', (req, res) => {
 
 app.use(errorHandler)
 
-if (process.env.NODE_ENV !== 'production') {
-  // createServer(app).listen(PORT, () => {
-  //   console.log(`Server running on port ${PORT}`)
-  // })
-  _createServer(
-    {
-      key: readFileSync('key.pem'),
-      cert: readFileSync('certificate.pem'),
-    },
-    app,
-  ).listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-  })
-} else {
-  _createServer(
-    {
-      key: readFileSync('key.pem'),
-      cert: readFileSync('certificate.crt'),
-      ca: readFileSync('intermediate.crt'),
-    },
-    app,
-  ).listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-  })
-}
+// if (process.env.NODE_ENV !== 'production') {
+//   createServer(app).listen(PORT, () => {
+//     console.log(`Dev Server running on port ${PORT}`)
+//   })
+//   // _createServer(
+//   //   {
+//   //     key: readFileSync('key.pem'),
+//   //     cert: readFileSync('certificate.pem'),
+//   //   },
+//   //   app,
+//   // ).listen(PORT, () => {
+//   //   console.log(`Server running on port ${PORT}`)
+//   // })
+// } else {
+//   createServer(app).listen(PORT, () => {
+//     console.log(`Production Server running on port ${PORT}`)
+//   })
+// }
+app.listen(PORT, () => console.log(`DEV Server running on port ${PORT}`))
 
 export default app
