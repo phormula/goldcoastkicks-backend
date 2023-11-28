@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import Config from '@app/model/Config'
-import createHttpError from 'http-errors'
+import Config from '@model/Config'
 
 class ConfigController {
   async getAllConfigs(_req: Request, res: Response, next: NextFunction) {
@@ -19,7 +18,7 @@ class ConfigController {
 
       if (result) return res.send({ data: result })
 
-      return next(createHttpError(404, 'Config not found'))
+      return res.status(404).json({ status: 'error', message: 'Config not found' })
     } catch (error) {
       return next(error)
     }
@@ -46,7 +45,7 @@ class ConfigController {
 
       if (result) return res.send({ data: result })
 
-      return next(createHttpError(404, 'Config not found'))
+      return res.status(404).json({ status: 'error', message: 'Config not found' })
     } catch (error) {
       return next(error)
     }

@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import { protectedUser } from '@app/helpers'
-import createHttpError from 'http-errors'
 import User from '@model/User'
 import Mail from '@model/Mail'
-import Role from '@app/model/Role'
+import Role from '@model/Role'
 
 class UserController {
   async getAllUsers(_req: Request, res: Response, next: NextFunction) {
@@ -25,7 +24,7 @@ class UserController {
         return res.send(protectedUser(result))
       }
 
-      return next(createHttpError(404, 'User not found'))
+      return res.status(404).json({ status: 'error', message: 'User not found' })
     } catch (err) {
       return next(err)
     }

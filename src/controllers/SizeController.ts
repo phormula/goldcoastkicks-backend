@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import Size from '@app/model/Size'
-import createHttpError from 'http-errors'
+import Size from '@model/Size'
 
 class SizeController {
   async getAllSizes(req: Request, res: Response, next: NextFunction) {
@@ -21,7 +20,7 @@ class SizeController {
         return res.send({ data: result })
       }
 
-      return next(createHttpError(404, 'Size not found'))
+      return res.status(404).json({ status: 'error', message: 'Size not found' })
     } catch (error) {
       return next(error)
     }

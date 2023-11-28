@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
-import Shipping from '@app/model/Shipping'
-import Currency from '@app/model/Currency'
+import Shipping from '@model/Shipping'
+import Currency from '@model/Currency'
 
 class ShippingController {
   async getAllShippings(req: Request, res: Response, next: NextFunction) {

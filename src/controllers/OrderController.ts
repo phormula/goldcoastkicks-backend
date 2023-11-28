@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from 'express'
 import { isAdmin } from '@app/helpers'
 import Order from '@model/Order'
 import OrderStatus from '@model/OrderStatus'
-import User from '@app/model/User'
+import User from '@model/User'
 import MailService from '@app/services/Mail.service'
-import OrderItem from '@app/model/OrderItem'
+import OrderItem from '@model/OrderItem'
 
 class OrderController {
   async getAllOrders(req: Request, res: Response, next: NextFunction) {

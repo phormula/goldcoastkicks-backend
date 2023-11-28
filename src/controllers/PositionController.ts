@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import Position from '@app/model/Position'
-import createHttpError from 'http-errors'
+import Position from '@model/Position'
 
 class PositionController {
   async getAllPositions(req: Request, res: Response, next: NextFunction) {
@@ -21,7 +20,7 @@ class PositionController {
         return res.send({ data: result })
       }
 
-      return next(createHttpError(404, 'Position not found'))
+      return res.status(404).json({ status: 'error', message: 'Position not found' })
     } catch (error) {
       return next(error)
     }

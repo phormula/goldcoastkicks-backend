@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import Colorway from '@app/model/Colorway'
-import createHttpError from 'http-errors'
+import Colorway from '@model/Colorway'
 
 class ColorwayController {
   async getAllColorways(req: Request, res: Response, next: NextFunction) {
@@ -19,7 +18,7 @@ class ColorwayController {
 
       if (result) return res.send({ data: result })
 
-      return next(createHttpError(404, 'Colorway not found'))
+      return res.status(404).json({ status: 'error', message: 'Court not found' })
     } catch (error) {
       return next(error)
     }

@@ -1,11 +1,10 @@
 import 'dotenv/config'
 import { Request, Response, NextFunction } from 'express'
-import createHttpError from 'http-errors'
 import { hashSync } from 'bcryptjs'
-import { protectedUser, verifyToken } from '@app/helpers'
 import { JwtPayload } from 'jsonwebtoken'
+import { protectedUser, verifyToken } from '@app/helpers'
 import User from '@model/User'
-import Role from '@app/model/Role'
+import Role from '@model/Role'
 import Mail from '@model/Mail'
 import OAuthService from '@app/services/OAuth.service'
 import AuthService from '@app/services/Auth.service'
@@ -105,7 +104,7 @@ class AuthController {
       const tokenData = verifyToken(token) as JwtPayload
       console.log(req.body)
       if (newPassword !== confirmPassword) {
-        return next(createHttpError(400, 'Passwords do not match'))
+        return res.status(400).json({ status: 'error', message: 'Passwords do not match' })
       }
 
       const updateUser = await User.query()
@@ -115,7 +114,7 @@ class AuthController {
       // console.log(updateUser)
       // console.log(user)
       if (!updateUser) {
-        return next(createHttpError(400, 'There is no user with this email address!'))
+        return res.status(400).json({ status: 'error', message: 'There is no user with this email address!' })
       }
 
       if (user) {
@@ -180,7 +179,7 @@ class AuthController {
         })
       }
 
-      res.status(200).json({ success: true })
+      return res.status(200).json({ success: true })
     } catch (err) {
       return next(err)
     }
@@ -193,7 +192,8 @@ class AuthController {
   async deleteCurrentUser(req: Request, res: Response, next: NextFunction) {
     try {
       await (req.user as User).destroy()
-      res.status(204).send()
+
+      return res.status(204).send()
     } catch (err) {
       return next(err)
     }
@@ -210,14 +210,14 @@ class AuthController {
       // Check user password
       const isValidPassword = await user.validatePassword(current)
       if (!isValidPassword) {
-        return next(createHttpError(400, 'Incorrect password!'))
+        return res.status(400).json({ status: 'error', message: 'Incorrect password!' })
       }
 
       // Update password
       user.password = hashSync(password, Number(process.env.SALT))
       await user.save()
 
-      return res.json({ success: true })
+      return res.status(200).json({ success: true })
     } catch (err) {
       return next(err)
     }
@@ -226,9 +226,7 @@ class AuthController {
     try {
       const roles = await Role.query().select()
 
-      res.status(200).json({ data: roles })
-
-      return roles
+      return res.status(200).json({ data: roles })
     } catch (err) {
       return next(err)
     }

@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import Type from '@app/model/Type'
-import createHttpError from 'http-errors'
+import Type from '@model/Type'
 
 class TypeController {
   async getAllTypes(req: Request, res: Response, next: NextFunction) {
@@ -21,7 +20,7 @@ class TypeController {
         return res.send({ data: result })
       }
 
-      return next(createHttpError(404, 'Type not found'))
+      return res.status(404).json({ status: 'error', message: 'Type not found' })
     } catch (error) {
       return next(error)
     }

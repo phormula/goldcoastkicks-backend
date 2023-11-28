@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
-import createHttpError from 'http-errors'
-import Currency from '@app/model/Currency'
 import CurrencyConverterService from '@app/services/currency-converter.service'
+import Currency from '@model/Currency'
 import db from '@app/database/knexdb'
 
 class CurrencyController {
@@ -32,7 +31,7 @@ class CurrencyController {
         return res.send({ data: result })
       }
 
-      return next(createHttpError(404, 'Currency not found'))
+      return res.status(404).json({ status: 'error', message: 'Currency not found' })
     } catch (err) {
       return next(err)
     }

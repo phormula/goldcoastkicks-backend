@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import Brand from '@app/model/Brand'
-import createHttpError from 'http-errors'
+import Brand from '@model/Brand'
 
 class BrandController {
   async getAllBrands(req: Request, res: Response, next: NextFunction) {
@@ -27,7 +26,7 @@ class BrandController {
         return res.send({ data: { ...result, image: `${baseUrl}/file/image/${result.image}` } })
       }
 
-      return next(createHttpError(404, 'Brand not found'))
+      return res.status(404).json({ status: 'error', message: 'Brand not found' })
     } catch (err) {
       return next(err)
     }

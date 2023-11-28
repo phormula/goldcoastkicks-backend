@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import Court from '@app/model/Court'
-import createHttpError from 'http-errors'
+import Court from '@model/Court'
 
 class CourtController {
   async getAllCourts(req: Request, res: Response, next: NextFunction) {
@@ -21,7 +20,7 @@ class CourtController {
         return res.send({ data: result })
       }
 
-      return next(createHttpError(404, 'Court not found'))
+      return res.status(404).json({ status: 'error', message: 'Court not found' })
     } catch (error) {
       return next(error)
     }
