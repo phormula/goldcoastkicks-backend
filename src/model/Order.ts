@@ -4,6 +4,7 @@ import OrderStatus from '@model/OrderStatus'
 import User from '@model/User'
 import Shipping from '@model/Shipping'
 import Currency from '@model/Currency'
+import OrderHistory from '@model/OrderHistory'
 
 class Order extends ModelBase {
   id: number | string
@@ -38,6 +39,14 @@ class Order extends ModelBase {
         join: {
           from: 'orders.order_status_id',
           to: 'order_statuses.id',
+        },
+      },
+      history: {
+        relation: ModelBase.HasManyRelation,
+        modelClass: OrderHistory,
+        join: {
+          from: 'orders.id',
+          to: 'order_history.order_id',
         },
       },
       user: {

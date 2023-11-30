@@ -1,16 +1,12 @@
 import { Request, Response, NextFunction } from 'express'
-import { protectedUser } from '@app/helpers'
-import User from '@model/User'
-import Mail from '@model/Mail'
-import Role from '@model/Role'
+import UserService from '@app/services/User.service'
 
 class UserController {
   async getAllUsers(_req: Request, res: Response, next: NextFunction) {
     try {
-      const users = await User.query().withGraphJoined('roles(defaultSelects)')
-      const result = users.map((u) => protectedUser(u))
+      const users = await UserService.getAllUsers()
 
-      return res.send({ data: result })
+      return res.send(users)
     } catch (err) {
       return next(err)
     }
@@ -18,13 +14,30 @@ class UserController {
 
   async getUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await User.query().alias('roles').findById(req.params.id).withGraphFetched('roles(defaultSelects)')
+      const user = await UserService.getUser(req.params.id)
+      const statusCode = user?.data?.status === 'error' ? 404 : 200
 
-      if (result) {
-        return res.send(protectedUser(result))
-      }
+      return res.status(statusCode).json(user)
+    } catch (err) {
+      return next(err)
+    }
+  }
 
-      return res.status(404).json({ status: 'error', message: 'User not found' })
+  async updateUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = await UserService.updateUser(req.params.id, req.body)
+
+      return res.status(200).json(user)
+    } catch (err) {
+      return next(err)
+    }
+  }
+
+  async deleteUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = await UserService.deleteUser(req.params.id)
+
+      return res.status(200).json(user)
     } catch (err) {
       return next(err)
     }
@@ -32,7 +45,7 @@ class UserController {
 
   async getUserRoles(req: Request, res: Response, next: NextFunction) {
     try {
-      const roles = await Role.query().select('*')
+      const roles = await UserService.getUserRoles()
 
       return res.status(200).send(roles)
     } catch (err) {
@@ -42,11 +55,62 @@ class UserController {
 
   async getMailTemplates(req: Request, res: Response, next: NextFunction) {
     try {
-      const mailTemplate = await Mail.query().select('*')
+      const mailTemplate = await UserService.getMailTemplates()
 
       return res.status(200).send(mailTemplate)
     } catch (err) {
       return next(err)
+    }
+  }
+
+  async getAllUserAddress(req: Request, res: Response, next: NextFunction) {
+    try {
+      const addresses = await UserService.getAllUserAddress(Number(req.query.user_id))
+
+      return res.send(addresses)
+    } catch (error) {
+      return next(error)
+    }
+  }
+
+  async getUserAddress(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userAddress = await UserService.getUserAddress(Number(req.params.id))
+      const statusCode = userAddress.data.status === 'error' ? 404 : 200
+
+      return res.status(statusCode).json(userAddress)
+    } catch (error) {
+      return next(error)
+    }
+  }
+
+  async createUserAddress(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userAddress = await UserService.createUserAddress(req.body)
+
+      return res.status(201).json(userAddress)
+    } catch (error) {
+      return next(error)
+    }
+  }
+  // TODO only delete only what you own
+  async updateUserAddress(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userAddress = await UserService.updateUserAddress(req.params.id, req.body)
+
+      return res.status(200).json(userAddress)
+    } catch (error) {
+      return next(error)
+    }
+  }
+
+  async deleteUserAddress(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userAddress = await UserService.deleteUserAddress(req.params.id)
+
+      return res.status(200).json(userAddress)
+    } catch (error) {
+      return next(error)
     }
   }
 }

@@ -1,62 +1,13 @@
 import { Request, Response, NextFunction } from 'express'
-import { isAdmin } from '@app/helpers'
-import Order from '@model/Order'
-import OrderStatus from '@model/OrderStatus'
 import User from '@model/User'
-import MailService from '@app/services/Mail.service'
-import OrderItem from '@model/OrderItem'
+import OrderService from '@app/services/Order.service'
 
 class OrderController {
   async getAllOrders(req: Request, res: Response, next: NextFunction) {
     try {
-      const user = req.user as User
-      const page = Number(req.query.page) || 1
-      const limit = Number(req.query.limit) || 15
-      const offset = (page - 1) * limit
+      const result = await OrderService.getAllOrders(req.user as User, req.query)
 
-      let orderQuery = Order.query()
-        .select(
-          'orders.*',
-          'status.key as status_key',
-          'status.value as status_value',
-          'status.color as status_color',
-          'user.id as user_id',
-          'user.email as user_email',
-          'user.first_name as user_first_name',
-          'user.last_name as user_last_name',
-          'currency.name as currency_name',
-          'currency.code as currency_code',
-          'currency.symbol as currency_symbol',
-          'shipping.name as shipping_name',
-          'shipping.duration as shipping_duration',
-          Order.relatedQuery('detail').select(Order.raw('SUM(price * quantity)')).as('total_price'),
-        )
-        .leftJoinRelated('status')
-        .leftJoinRelated('user')
-        .leftJoinRelated('detail')
-        .leftJoinRelated('shipping')
-        .leftJoinRelated('currency')
-        .groupBy('orders.id')
-        .limit(limit)
-        .offset(offset)
-
-      let countQuery = Order.query()
-
-      if (!isAdmin(user)) {
-        orderQuery = orderQuery.where('user_id', Number(user.id))
-        countQuery = countQuery.where('user_id', Number(user.id))
-      }
-
-      const orders = await orderQuery
-      const totalOrders = (await countQuery.count('id').first()) as { [key: string]: any }
-
-      res.send({
-        data: orders,
-        current_page: page,
-        per_page: limit,
-        total: totalOrders['count(`id`)'],
-        last_page: Math.ceil(totalOrders['count(`id`)'] / limit),
-      })
+      return res.send(result)
     } catch (err) {
       return next(err)
     }
@@ -64,16 +15,12 @@ class OrderController {
 
   async getOrder(req: Request, res: Response, next: NextFunction) {
     try {
-      const order = await Order.query()
-        .findById(req.params.id)
-        .withGraphFetched('[detail.product(customerSelect), status, user(defaultSelects), shipping, currency]')
-
-      const user = req.user as User
-
-      if (order && (isAdmin(user) || order.user.id === user.id)) {
-        return res.send({ data: { ...order } })
+      const order = await OrderService.getOrder(req.params.id)
+      if (order.status === 'error') {
+        return res.status(404).send(order)
       }
-      return res.status(404).send({ status: 'error', message: 'Order not found' })
+
+      return res.status(200).send(order)
     } catch (err) {
       return next(err)
     }
@@ -81,25 +28,9 @@ class OrderController {
 
   async createOrder(req: Request, res: Response, next: NextFunction) {
     try {
-      const { line_orders, note, user, shipping_id, shipping_amount, currency_id } = req.body
+      const order = await OrderService.createOrder(req.body, req.user as User)
 
-      const userOrdered = user || (req.user as User).id
-      const orderStatus = await OrderStatus.query().findOne({ key: 'placed' })
-      const order = await Order.query().upsertGraph(
-        {
-          note,
-          shipping_amount,
-          detail: line_orders,
-          status: [orderStatus],
-          user: { id: userOrdered },
-          shipping: { id: Number(shipping_id) },
-          currency: { id: Number(currency_id) },
-        },
-        { relate: true },
-      )
-      res.status(201).json({ data: { order } })
-
-      return order
+      return res.status(201).json(order)
     } catch (err) {
       next(err)
     }
@@ -107,25 +38,11 @@ class OrderController {
 
   async updateOrder(req: Request, res: Response, next: NextFunction) {
     try {
-      const orderId = req.params.id
-      const { line_orders, note, status, user_id, shipping_id, shipping_amount } = req.body
-      const updateOrder = await Order.query().updateAndFetchById(orderId, {
-        note,
-        user_id,
-        order_status_id: status,
-        shipping_amount,
-        shipping_id: Number(shipping_id),
-      })
-      let updatedItems = []
-      for (let i = 0; i < line_orders.length; i++) {
-        const { id, ...item } = line_orders[i]
-        const updatedItem = await OrderItem.query().updateAndFetchById(id, item).where({ order_id: orderId })
-        updatedItems.push(updatedItem)
-      }
-      updateOrder.detail = updatedItems
+      const user = req.user as User
+      await OrderService.createOrderHistory(req.params.id, user)
+      const updateOrder = await OrderService.updateOrder(req.params.id, req.body, user)
 
-      // MailService.sendMail({to:})
-      return res.status(200).json({ data: { ...updateOrder } })
+      return res.status(200).json(updateOrder)
     } catch (error) {
       return next(error)
     }
@@ -133,17 +50,10 @@ class OrderController {
 
   async deleteOrder(req: Request, res: Response, next: NextFunction) {
     try {
-      const orderId = req.params.id
-      const order = await Order.query().findById(orderId)
+      const order = await OrderService.deleteOrder(req.params.id)
+      const statusCode = order.data.status === 'error' ? 500 : 200
 
-      if (order) {
-        await order.$relatedQuery('detail').unrelate()
-        await order.$query().delete()
-
-        return res.status(200).json({ data: { status: 'success', message: 'Order deleted successfully' } })
-      }
-
-      return res.status(500).json({ error: 'Error deleting order!' })
+      return res.status(statusCode).json(order)
     } catch (err) {
       next(err)
     }
@@ -151,9 +61,9 @@ class OrderController {
 
   async orderStatus(_req: Request, res: Response, next: NextFunction) {
     try {
-      const orderStatus = await OrderStatus.query()
+      const orderStatus = await OrderService.orderStatus()
 
-      return res.send({ data: orderStatus })
+      return res.status(200).send(orderStatus)
     } catch (err) {
       return next(err)
     }
@@ -161,9 +71,9 @@ class OrderController {
 
   async getOrderStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const orderStatus = await OrderStatus.query().findById(req.params.id)
+      const orderStatus = await OrderService.getOrderStatus(req.params.id)
 
-      return res.send({ data: { ...orderStatus } })
+      return res.status(200).send(orderStatus)
     } catch (err) {
       return next(err)
     }
@@ -171,10 +81,9 @@ class OrderController {
 
   async createOrderStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const { key, value, color, description } = req.body
-      const orderStatus = await OrderStatus.query().insert({ key, value, color, description })
+      const orderStatus = await OrderService.createOrderStatus(req.body)
 
-      return res.status(200).json({ data: orderStatus })
+      return res.status(200).json(orderStatus)
     } catch (err) {
       return next(err)
     }
@@ -182,12 +91,9 @@ class OrderController {
 
   async updateOrderStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const { key, value, color, description } = req.body
-      const orderStatus = await OrderStatus.query()
-        .update({ key, value, color, description })
-        .where({ id: req.params.id })
+      const orderStatus = await OrderService.updateOrderStatus(req.params.id, req.body)
 
-      return res.status(200).json({ data: orderStatus })
+      return res.status(200).json(orderStatus)
     } catch (err) {
       return next(err)
     }
@@ -195,9 +101,9 @@ class OrderController {
 
   async deleteOrderStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      await OrderStatus.query().findById(req.params.id).delete()
+      const order = await OrderService.deleteOrderStatus(req.params.id)
 
-      return res.status(200).json({ data: { status: 'success', message: 'Order status deleted successfully' } })
+      return res.status(200).json(order)
     } catch (error) {
       return next(error)
     }

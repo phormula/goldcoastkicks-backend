@@ -12,7 +12,9 @@ class User extends ModelBase {
   password: string
   first_name: string
   last_name: string
+  is_disabled: boolean | number
   roles: any[]
+  role: Role
 
   static get tableName() {
     return 'users'
@@ -91,12 +93,12 @@ class User extends ModelBase {
           to: 'roles.id',
         },
       },
-      detail: {
+      address: {
         relation: ModelBase.HasManyRelation,
         modelClass: UserAddress,
         join: {
-          from: 'orders.id',
-          to: 'order_items.order_id',
+          from: 'users.id',
+          to: 'user_addresses.user_id',
         },
       },
     }

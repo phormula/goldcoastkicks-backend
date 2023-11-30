@@ -231,6 +231,7 @@ class ProductService {
         {
           relate: true,
           unrelate: true,
+          noUpdate: ['buying_currency', 'selling_currency', 'colorway', 'brand', 'sizes', 'position', 'type', 'court'],
         },
       )
 

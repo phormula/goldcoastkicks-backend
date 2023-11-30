@@ -2,17 +2,30 @@ import ModelBase from '@model/ModelBase'
 
 class UserAddress extends ModelBase {
   id: number
-  address_1: string
-  address_2: string
+  user_id: number
+  address: string
   house_no: string
   town: string
   city: string
   region: string
   country: string
-  default: number
+  is_default: number
 
   static get tableName() {
     return 'user_addresses'
+  }
+
+  static get relationMappings() {
+    return {
+      user: {
+        relation: ModelBase.BelongsToOneRelation,
+        modelClass: UserAddress,
+        join: {
+          from: 'users.id',
+          to: 'user_addresses.user_id',
+        },
+      },
+    }
   }
 }
 

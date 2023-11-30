@@ -1,7 +1,8 @@
 import { Router } from 'express'
-import { isAdmin, isAuthenticated, validate } from '@app/middleware'
+import { checkAdminOrOwner, isAdmin, isAuthenticated, validate } from '@app/middleware'
 import OrderController from '@app/controllers/OrderController'
 import OrderValidations from '@app/routes/validations/order'
+import Order from '@model/Order'
 
 const router = Router()
 
@@ -19,8 +20,13 @@ router
 
 router
   .route('/:id')
-  .get(isAuthenticated, OrderController.getOrder)
-  .put(isAuthenticated, validate(OrderValidations.updateRules), OrderController.updateOrder)
+  .get(isAuthenticated, checkAdminOrOwner(Order, 'user_id'), OrderController.getOrder)
+  .put(
+    isAuthenticated,
+    checkAdminOrOwner(Order, 'user_id'),
+    validate(OrderValidations.updateRules),
+    OrderController.updateOrder,
+  )
   .delete(isAuthenticated, isAdmin, OrderController.deleteOrder)
 
 router.post('/create', isAuthenticated, validate(OrderValidations.createRules), OrderController.createOrder)

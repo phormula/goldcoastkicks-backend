@@ -10,6 +10,7 @@ export type EnvironmentConfig = {
   migrations?: object
   seeds?: object
   pool?: object
+  dateStrings?: boolean
 }
 
 // type Config = {

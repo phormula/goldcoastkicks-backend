@@ -24,9 +24,7 @@ const PORT = process.env.PORT || 50001
 Model.knex(db)
 
 db.on('query', (queryData: any) => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('SQL Query:', queryData.sql)
-  } else {
+  if (process.env.NODE_ENV === 'production') {
     LoggerService.logEvents(queryData.sql, 'sql_queries.txt')
   }
 })

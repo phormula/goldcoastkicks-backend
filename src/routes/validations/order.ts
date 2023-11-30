@@ -78,6 +78,7 @@ class OrderValidations {
     body('note').exists(),
     body('shipping_id').exists(),
     body('shipping_amount').exists(),
+    body('status_id').exists(),
   ]
 
   statusRules = [body('key').exists(), body('value').exists(), body('color').exists(), body('description').optional()]

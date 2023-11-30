@@ -30,7 +30,7 @@ export async function authenticationMiddleware(req: Request, res: Response, next
         const tokenData = verifyToken(token) as JwtPayload
 
         // Find user from database
-        const user = await User.query().findById(tokenData.id).withGraphFetched('roles')
+        const user = await User.query().findById(tokenData.id).whereNot({ is_disabled: 1 }).withGraphFetched('roles')
         if (!user) {
           return next({ status: 401, message: 'There is no user' })
         }

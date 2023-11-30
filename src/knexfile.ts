@@ -1,34 +1,43 @@
 import 'dotenv/config'
-import { EnvironmentConfig } from '@app/types/config.type'
+import { Knex } from 'knex'
+import moment from 'moment'
 
-/**
- * @type { Object.<string, import("knex").Knex.Config> }
- */
-const config: { [key: string]: EnvironmentConfig } = {
-  development: {
-    client: process.env.DB_CONNECTION,
-    connection: {
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
+const defaultConfig: Knex.Config = {
+  client: process.env.DB_CONNECTION,
+  connection: {
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    timezone: 'Z',
+    typeCast: function (field: any, next: () => any) {
+      if (field.type == 'DATETIME' || field.type == 'TIMESTAMP') {
+        return moment(field.string()).format('YYYY-MM-DD HH:mm:ss')
+      }
+      return next()
     },
-    migrations: { directory: './database/migrations' },
-    seeds: { directory: './database/seeders' },
+  },
+  migrations: { directory: './database/migrations' },
+  seeds: { directory: './database/seeders' },
+}
+
+const config: { [key: string]: Knex.Config } = {
+  development: {
+    ...defaultConfig,
+    debug: true,
+    useNullAsDefault: true,
   },
 
   test: {
-    client: process.env.DB_CONNECTION,
+    ...defaultConfig,
     connection: {
       host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
+      port: Number(process.env.DB_PORT),
       user: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: `${process.env.DB_DATABASE}_test`,
     },
-    migrations: { directory: './database/migrations' },
-    seeds: { directory: './database/seeders' },
   },
 
   staging: {
@@ -47,18 +56,7 @@ const config: { [key: string]: EnvironmentConfig } = {
     },
   },
 
-  production: {
-    client: process.env.DB_CONNECTION,
-    connection: {
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      user: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-    },
-    migrations: { directory: './database/migrations' },
-    seeds: { directory: './database/seeders' },
-  },
+  production: { ...defaultConfig },
 }
 
 export default config
