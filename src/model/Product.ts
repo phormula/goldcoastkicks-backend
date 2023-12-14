@@ -13,6 +13,7 @@ class Product extends ModelBase {
   id: number | string
   name: string
   description: string
+  slug: string
   sku: string
   weight: string
   image: string
@@ -25,7 +26,6 @@ class Product extends ModelBase {
   sizes: any[]
   brand: any
   colorway: any
-  gallery: any[]
   buying_currency: any
   selling_currency: any
   position: any
@@ -33,6 +33,7 @@ class Product extends ModelBase {
   court: any
   min_price: number
   max_price: number
+  gallery: ProductGallery[]
 
   static get tableName() {
     return 'products'

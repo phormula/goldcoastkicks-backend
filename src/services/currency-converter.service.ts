@@ -1,4 +1,4 @@
-import request from 'es6-request'
+import fetch from 'cross-fetch'
 
 class CurrencyConverterService {
   async convert(fromCurrencyCode: string, toCurrencyCode?: string) {
@@ -13,8 +13,9 @@ class CurrencyConverterService {
     }
 
     try {
-      const [body, res] = await request.get(url)
-      return JSON.parse(String(body))
+      const response = await fetch(url)
+      const res = await response.json()
+      return res
     } catch (error) {
       console.error(error)
       return error
@@ -23,12 +24,10 @@ class CurrencyConverterService {
 
   async getCurrucies() {
     try {
-      const [body, response] = await request.get(
-        'https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.json',
-      )
-      const data: any = JSON.parse(String(body))
+      const response = await fetch('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.json')
+      const data = await response.json()
       const currencies: any[] = Object.keys(data)
-      let formatCurrency = []
+      let formatCurrency: any[] = []
       for (const key of currencies) {
         formatCurrency.push({ code: key, name: data[key] })
       }

@@ -10,52 +10,29 @@ class OrderService {
   async getAllOrders(user: User, requestQuery: { [key: string]: any }) {
     try {
       const { page, limit } = requestQuery
-      const pageData = page ? Number(page) : 1
-      const limitData = limit ? Number(limit) : 15
-      const offset = (pageData - 1) * limitData
+      const pageData = page ? Number(page) - 1 : 0
+      const limitData = Number(limit) || 15
 
-      let orderQuery = Order.query()
-        .select(
-          'orders.*',
-          'status.key as status_key',
-          'status.value as status_value',
-          'status.color as status_color',
-          'user.id as user_id',
-          'user.email as user_email',
-          'user.first_name as user_first_name',
-          'user.last_name as user_last_name',
-          'currency.name as currency_name',
-          'currency.code as currency_code',
-          'currency.symbol as currency_symbol',
-          'shipping.name as shipping_name',
-          'shipping.duration as shipping_duration',
-          Order.relatedQuery('detail').select(Order.raw('SUM(price * quantity)')).as('total_price'),
-        )
-        .leftJoinRelated('status')
-        .leftJoinRelated('user')
-        .leftJoinRelated('detail')
-        .leftJoinRelated('shipping')
-        .leftJoinRelated('currency')
-        .groupBy('orders.id')
-        .limit(limitData)
-        .offset(offset)
-
-      let countQuery = Order.query()
+      let query = Order.query()
 
       if (!isAdmin(user)) {
-        orderQuery = orderQuery.where('user_id', Number(user.id))
-        countQuery = countQuery.where('user_id', Number(user.id))
+        query = query.where('user_id', Number(user.id))
       }
-
-      const orders = await orderQuery
-      const totalOrders = (await countQuery.count('id').first()) as { [key: string]: any }
+      const orders = await query
+        .select('orders.*')
+        .withGraphFetched('[status,user,shipping,currency]')
+        .select(
+          Order.relatedQuery('detail').count().as('no_of_products'),
+          Order.relatedQuery('detail').select(Order.raw('SUM(price * quantity)')).as('total_price'),
+        )
+        .page(pageData, limitData)
 
       return {
-        data: orders,
-        current_page: pageData,
+        data: orders.results,
+        current_page: pageData + 1,
         per_page: limitData,
-        total: totalOrders['count(`id`)'],
-        last_page: Math.ceil(totalOrders['count(`id`)'] / limit),
+        total: orders.total,
+        last_page: Math.ceil(orders.total / limitData),
       }
     } catch (err: any) {
       throw new Error(err.message)
@@ -114,7 +91,7 @@ class OrderService {
         shipping_id: Number(shipping_id),
       })
 
-      let updatedItems = []
+      let updatedItems: any[] = []
       for (let i = 0; i < line_orders.length; i++) {
         const { id, ...item } = line_orders[i]
         const updatedItem = await OrderItem.query().updateAndFetchById(id, item).where({ order_id: orderId })

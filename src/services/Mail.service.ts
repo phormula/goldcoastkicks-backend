@@ -69,11 +69,11 @@ class MailService {
     const mailInfo = await this.transporter.sendMail(payload)
 
     if (process.env.NODE_ENV !== 'production') {
-      LoggerService.logEvents(`Nodemailer ethereal URL: ${nodemailer.getTestMessageUrl(mailInfo)}`, 'mailLogger.txt')
+      LoggerService.logEvents(`Nodemailer ethereal URL: ${nodemailer.getTestMessageUrl(mailInfo)}`, 'mail_log.log')
       console.log(`Mail Preview URL is ${getTestMessageUrl(mailInfo)}`)
     } else {
-      LoggerService.logEvents(`Mail sent successfully!!`, 'mailLogger.txt')
-      LoggerService.logEvents(`[MailResponse]=${mailInfo.response} [MessageID]=${mailInfo.messageId}`, 'mailLogger.txt')
+      LoggerService.logEvents(`Mail sent successfully!!`, 'mail_log.log')
+      LoggerService.logEvents(`[MailResponse]=${mailInfo.response} [MessageID]=${mailInfo.messageId}`, 'mail_log.log')
     }
 
     // Return mail response

@@ -1,6 +1,6 @@
 import fs from 'fs/promises'
 import path from 'path'
-import { createUniqueProductSlug, filterKey, modelId } from '@app/helpers'
+import { filterKey, modelId } from '@app/helpers'
 import db from '@app/database/knexdb'
 import Product from '@model/Product'
 import Brand from '@model/Brand'
@@ -11,89 +11,45 @@ import ProductGallery from '@model/ProductGallery'
 import User from '@model/User'
 import { isAdmin } from '@app/helpers'
 import ProductFinancial from '@app/model/ProductFinancial'
+import Notification from '@app/model/Notification'
+import UserDeviceToken from '@app/model/UserDeviceToken'
 
-class ProductService {
-  async getAllProducts(requestQuery: { [key: string]: any }, baseUrl: string) {
+class NotificationService {
+  async getAllNotifications(requestQuery: { [key: string]: any }, user: User) {
     try {
-      const { brand, position, type, court, page, limit, query } = requestQuery
-      const pageData = Number(page) || 1
+      const { page, limit } = requestQuery
+      const pageData = page ? Number(page) - 1 : 0
       const limitData = Number(limit) || 15
-      const offset = (pageData - 1) * limitData
 
-      let productQuery = Product.query()
-        .distinct(
-          'products.*',
-          'brand.name as brand',
-          'selling_currency.symbol as currency_symbol',
-          'selling_currency.code as currency_code',
-        )
-        .leftJoinRelated('brand')
-        .leftJoinRelated('colorway')
-        .leftJoinRelated('position')
-        .leftJoinRelated('type')
-        .leftJoinRelated('court')
-        .leftJoinRelated('selling_currency')
+      let query = Notification.query()
 
-      let countQuery = Product.query()
-
-      if (query) {
-        const searchWords = query.split(' ')
-        productQuery = productQuery
-          .orWhere((builder) => {
-            for (const word of searchWords) builder.orWhere('brand.name', 'like', `%${word}%`)
-          })
-          .orWhere((builder) => {
-            for (const word of searchWords) builder.orWhere('position.name', 'like', `%${word}%`)
-          })
-          .orWhere((builder) => {
-            for (const word of searchWords) builder.orWhere('type.name', 'like', `%${word}%`)
-          })
-          .orWhere((builder) => {
-            for (const word of searchWords) builder.orWhere('court.name', 'like', `%${word}%`)
-          })
-          .orWhere((builder) => {
-            for (const word of searchWords) builder.orWhere('products.name', 'like', `%${word}%`)
-          })
-          .orWhere((builder) => {
-            for (const word of searchWords) builder.orWhere('products.sku', 'like', `%${word}%`)
-          })
-          .orWhere((builder) => {
-            for (const word of searchWords) builder.orWhere('products.description', 'like', `%${word}%`)
-          })
-        const subquery = productQuery.clone()
-        countQuery = countQuery.from(subquery.as('results'))
+      if (!isAdmin(user)) {
+        query = query.where('user_id', Number(user.id))
       }
-      if (brand) {
-        productQuery = productQuery.where('brand.id', Number(brand))
-        countQuery = countQuery.where('brand_id', Number(brand))
-      }
-      if (position) {
-        productQuery = productQuery.where('position.id', Number(position))
-        countQuery = countQuery.leftJoinRelated('position').where('position.id', Number(position))
-      }
-      if (type) {
-        productQuery = productQuery.where('type.id', Number(type))
-        countQuery = countQuery.leftJoinRelated('type').where('type.id', Number(type))
-      }
-      if (court) {
-        productQuery = productQuery.where('court.id', Number(court))
-        countQuery = countQuery.leftJoinRelated('court').where('court.id', Number(court))
-      }
-
-      const totalProducts = (await countQuery.count('* as count').first()) as { [key: string]: any }
-      const products = await productQuery.limit(limitData).offset(offset).groupBy('products.id')
-      const productData = products.map((product) => {
-        const image = { image: `${baseUrl}/file/image/${product.image}` }
-        return { ...product, ...image }
-      })
+      const notifications = await query
+        .withGraphFetched('[entity,emailNotifications, pushNotifications, user(defaultSelects)]')
+        .page(pageData, limitData)
 
       return {
-        data: productData,
-        current_page: pageData,
+        data: notifications.results,
+        current_page: pageData + 1,
         per_page: limitData,
-        total: totalProducts['count'],
-        last_page: Math.ceil(totalProducts['count'] / limitData),
+        total: notifications.total,
+        last_page: Math.ceil(notifications.total / limitData),
       }
+    } catch (err: any) {
+      throw new Error(err.message)
+    }
+  }
+
+  async getUserDeviceToken(userId: number) {
+    try {
+      const deviceTokens = await UserDeviceToken.query()
+        .withGraphFetched('user')
+        .where({ user_id: userId, device_type: 'android' })
+      const tokens = deviceTokens.map((tokens) => tokens.device_token)
+
+      return [...new Set(tokens)] || { status: 'error', message: 'Not found' }
     } catch (err: any) {
       throw new Error(err.message)
     }
@@ -101,24 +57,23 @@ class ProductService {
 
   async getProduct(id: string | number, baseUrl: string, user: User) {
     try {
-      const idOrSlug = isNaN(Number(id)) ? { slug: id } : { id }
       let productQuery = Product.query()
-        .where(idOrSlug)
+        .findById(id)
         .withGraphFetched('[sizes(defaultSelects),colorway(default),brand(default),selling_currency]')
-        .withGraphFetched('[position(defaultSelects),type(defaultSelects),court(defaultSelects), gallery.color]')
+        .withGraphFetched('[position(defaultSelects),type(defaultSelects),court(defaultSelects)]')
       if (isAdmin(user)) {
         productQuery = productQuery.withGraphFetched('[buying_currency,financial]')
       }
 
-      const product = await productQuery.first()
-      const imgUrl = `${baseUrl}/file/image`
+      const product = await productQuery
       if (product) {
-        const gallery = product.gallery.map((g) => ({ ...g, image: `${imgUrl}/${g.image}` }))
-        const productRes = { ...product, ...{ gallery } }
-        const { buying_price, buying_currency_id, payment_fees, profit_percent, ...productData } = productRes
-        const result = !isAdmin(user) ? productData : productRes
+        const gallery = product.gallery.map((g) => ({ ...g, image: `${baseUrl}/file/image/${g.image}` }))
+        console.log(gallery)
+        const { buying_price, buying_currency_id, ...productData } = { ...product, ...gallery }
 
-        return { data: { ...result, image: `${imgUrl}/${product.image}` } }
+        const result = !isAdmin(user) ? productData : product
+
+        return { data: { ...result, image: `${baseUrl}/file/image/${product.image}` } }
       }
 
       return { status: 'error', message: 'Product not found' }
@@ -133,7 +88,6 @@ class ProductService {
         name,
         description,
         sku,
-        slug,
         weight,
         sizes,
         buying_price,
@@ -149,13 +103,7 @@ class ProductService {
         court,
         colorway_id,
       } = data
-      let productSlug = slug
 
-      if (!slug) {
-        const productWithSlugs = await Product.query().whereNotNull('slug')
-        const existingSlugs = productWithSlugs.map((p) => p.slug)
-        productSlug = createUniqueProductSlug(name, existingSlugs)
-      }
       const image = file?.path.split('/').at(-1)
       const [product] = await Product.query().insertGraph(
         [
@@ -163,7 +111,6 @@ class ProductService {
             name,
             description,
             sku,
-            slug: productSlug,
             weight,
             image,
             buying_price,
@@ -392,4 +339,4 @@ class ProductService {
   }
 }
 
-export default new ProductService()
+export default new NotificationService()

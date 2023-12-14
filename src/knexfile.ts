@@ -25,7 +25,7 @@ const defaultConfig: Knex.Config = {
 const config: { [key: string]: Knex.Config } = {
   development: {
     ...defaultConfig,
-    debug: true,
+    // debug: true,
     useNullAsDefault: true,
   },
 

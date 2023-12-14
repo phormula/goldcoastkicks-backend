@@ -1,16 +1,13 @@
 import Role from '@app/model/Role'
 import User from '@model/User'
+export { createUniqueProductSlug } from '@app/helpers/slug'
 
 export { generateToken as generateTokenHelper, verifyToken } from '@app/helpers/token'
 
 export function protectedUser(userObj: { [key: string]: any }) {
-  const fields = ['password', 'email_verified_at']
+  const { password, email_verified_at, ...user } = userObj
 
-  fields.forEach((e) => {
-    delete userObj[e]
-  })
-
-  return userObj
+  return user
 }
 
 export function getCommonIds(arr1: any[], arr2: any[]) {

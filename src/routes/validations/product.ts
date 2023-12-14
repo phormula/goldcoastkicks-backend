@@ -21,6 +21,7 @@ class ProductValidations {
       body('name').exists(),
       body('description').exists(),
       body('sku').exists(),
+      body('slug').optional(),
       body('weight').exists(),
       body('buying_price').isDecimal().exists(),
       body('selling_price').isDecimal().exists(),

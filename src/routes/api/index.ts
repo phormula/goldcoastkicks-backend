@@ -15,6 +15,7 @@ import positionRouter from '@routes/api/position'
 import typeRouter from '@routes/api/type'
 import currencyRouter from '@routes/api/currency'
 import configRouter from '@routes/api/config'
+import notificationRouter from '@routes/api/notication'
 
 import UserController from '@app/controllers/UserController'
 
@@ -39,6 +40,8 @@ router.use('/sizes', sizeRouter)
 router.use('/courts', courtRouter)
 router.use('/positions', positionRouter)
 router.use('/types', typeRouter)
+
+router.use('/notifications', notificationRouter)
 
 router.get('/mail-templates', isAuthenticated, isAdmin, UserController.getMailTemplates)
 

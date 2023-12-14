@@ -8,6 +8,9 @@ import Role from '@model/Role'
 import Mail from '@model/Mail'
 import OAuthService from '@app/services/OAuth.service'
 import AuthService from '@app/services/Auth.service'
+import UserDeviceToken from '@app/model/UserDeviceToken'
+import LoggerService from '@app/services/Logger.service'
+import UserAddress from '@app/model/UserAddress'
 
 class AuthController {
   /**`
@@ -16,7 +19,7 @@ class AuthController {
    */
   async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password, is_mobile } = req.body
+      const { email, password, is_mobile, device_type, device_token, device_token_type } = req.body
 
       // Find user by email address
       const user = await User.query().findOne({ email }).withGraphJoined('roles(defaultSelects)')
@@ -33,6 +36,18 @@ class AuthController {
       const expires = is_mobile ? undefined : '24h'
       const token = user.generateToken(expires)
       const refreshToken = user.generateToken(expires)
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || null
+      // console.log(ip)
+      await LoggerService.logEvents(`${JSON.stringify(protectedUser(user))} IP_address: ${ip}`, 'logins.log')
+      await UserDeviceToken.query().insertGraph(
+        {
+          device_type,
+          device_token,
+          device_token_type,
+          user,
+        },
+        { relate: true },
+      )
       return res.status(200).json({ data: { token, refreshToken, ...protectedUser(user) } })
     } catch (err) {
       return next(err)
@@ -161,7 +176,9 @@ class AuthController {
    */
   async getCurrentUser(req: Request, res: Response, next: NextFunction) {
     try {
-      res.json(protectedUser(req.user as { [key: string]: any }))
+      const userAddress = await UserAddress.query().where({ user_id: req.user?.id })
+
+      res.json({ data: { ...protectedUser(req.user as { [key: string]: any }), address: userAddress } })
     } catch (err) {
       return next(err)
     }

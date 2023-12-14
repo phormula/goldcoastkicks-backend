@@ -1,8 +1,14 @@
 import { body, query } from 'express-validator'
 
 class AuthValidations {
-  loginRules = [body('email').isEmail().exists(), body('password').exists(), body('is_mobile').optional()]
-  oAuthRules = [body('id_token').exists(), body('is_mobile').optional()]
+  commonloginRules = [
+    body('is_mobile').default(0).optional(),
+    body('device_type').exists(),
+    body('device_token').exists(),
+    body('device_token_type').exists(),
+  ]
+  loginRules = [body('email').isEmail().exists(), body('password').exists(), ...this.commonloginRules]
+  oAuthRules = [body('id_token').exists(), ...this.commonloginRules]
 
   resetPasswordRequestRules = [body('email').isEmail().exists()]
 

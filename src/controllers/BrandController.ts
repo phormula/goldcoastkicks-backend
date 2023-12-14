@@ -4,6 +4,7 @@ import Brand from '@model/Brand'
 class BrandController {
   async getAllBrands(req: Request, res: Response, next: NextFunction) {
     try {
+      console.log(req.get('origin'))
       const baseUrl = `${req.protocol}://${req.get('host')}`
       const brands = await Brand.query()
       const brandData = brands.map((brand) => {

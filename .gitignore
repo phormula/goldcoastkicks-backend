@@ -8,3 +8,7 @@ src/resources/static/assets/uploads/
 certificate.csr
 .DS_Store
 *.zip
+src/config/*.json
+package_bak.json
+push-to-prod.spec.ts
+rename.spec.ts

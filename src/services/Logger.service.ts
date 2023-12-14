@@ -22,7 +22,7 @@ export default class LoggerService {
   }
 
   static requestlogger(req: Request, _res: Response, next: NextFunction) {
-    LoggerService.logEvents(`${req.method}\t${req.headers.origin}\t${req.url}`, 'reqLog.txt')
+    LoggerService.logEvents(`${req.method}\t${req.headers.origin}\t${req.url}`, 'request_logs.log')
     console.log(`${req.method} ${req.path}`)
     next()
   }

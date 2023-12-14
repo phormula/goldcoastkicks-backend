@@ -6,18 +6,28 @@ import db from '@app/database/knexdb'
 class CurrencyController {
   async getAllCurrencies(req: Request, res: Response, next: NextFunction) {
     try {
-      let currencies
-      const query = Currency.query()
-      const { codes } = req.query
+      const { codes, name, page, limit } = req.query
+      const pageData = page ? Number(page) - 1 : 0
+      const limitData = Number(limit) || 15
+
+      let query = Currency.query()
 
       if (codes) {
         const codeSearch = (codes as string).split(',')
-        currencies = await query.whereIn('code', codeSearch)
-      } else {
-        currencies = await query.select()
+        query = query.whereIn('code', codeSearch)
       }
+      if (name) {
+        query = query.orWhere('name', 'LIKE', `%${String(name)}%`)
+      }
+      const currencies = await query.page(pageData, limitData)
 
-      return res.send({ data: currencies })
+      return res.send({
+        data: currencies.results,
+        current_page: pageData + 1,
+        per_page: limitData,
+        total: currencies.total,
+        last_page: Math.ceil(currencies.total / limitData),
+      })
     } catch (err) {
       return next(err)
     }
