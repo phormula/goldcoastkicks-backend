@@ -149,38 +149,37 @@ class ProductService {
         court,
         colorway_id,
       } = data
-      let productSlug = slug
+      let productSlug: string
 
-      if (!slug) {
-        const productWithSlugs = await Product.query().whereNotNull('slug')
-        const existingSlugs = productWithSlugs.map((p) => p.slug)
-        productSlug = createUniqueProductSlug(name, existingSlugs)
-      }
+      const productWithSlugs = await Product.query().whereNotNull('slug')
+      const existingSlugs = productWithSlugs.map((p) => p.slug)
+      productSlug = createUniqueProductSlug(slug || name, existingSlugs)
+      console.log(productSlug)
+
       const image = file?.path.split('/').at(-1)
-      const [product] = await Product.query().insertGraph(
-        [
-          {
-            name,
-            description,
-            sku,
-            slug: productSlug,
-            weight,
-            image,
-            buying_price,
-            selling_price,
-            profit_percent,
-            tax,
-            payment_fees,
-            brand: { id: Number(brand_id) },
-            colorway: { id: Number(colorway_id) },
-            buying_currency: { id: buying_currency_id },
-            selling_currency: { id: selling_currency_id },
-            sizes: modelId(sizes),
-            position: modelId(position),
-            type: modelId(type),
-            court: modelId(court),
-          },
-        ],
+      const product = await Product.query().insertGraph(
+        {
+          name,
+          description,
+          sku,
+          slug: productSlug,
+          weight,
+          image,
+          buying_price,
+          selling_price,
+          profit_percent,
+          tax,
+          payment_fees,
+          brand: { id: Number(brand_id) },
+          colorway: { id: Number(colorway_id) },
+          buying_currency: { id: buying_currency_id },
+          selling_currency: { id: selling_currency_id },
+          sizes: modelId(sizes),
+          position: modelId(position),
+          type: modelId(type),
+          court: modelId(court),
+        },
+
         {
           relate: ['position', 'type', 'court', 'sizes', 'colorway', 'buying_currency', 'selling_currency', 'brand'],
         },

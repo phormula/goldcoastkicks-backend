@@ -1,9 +1,9 @@
 import slugify from 'slugify'
 
 export function createUniqueProductSlug(productName: string, existingSlugs: string[]) {
-  const cleanedName = productName.replace(/[^\w\s]/gi, '').toLowerCase()
+  // const cleanedName = productName.replace(/[^\w\s]/gi, '').toLowerCase()
 
-  const baseSlug = slugify(cleanedName, { lower: true, strict: true })
+  const baseSlug = slugify(productName, { lower: true, strict: true })
 
   let uniqueSlug = baseSlug
   let counter = 1
