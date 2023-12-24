@@ -7,6 +7,8 @@ import express, { urlencoded } from 'express'
 import { join } from 'path'
 import cors from 'cors'
 import { Model } from 'objection'
+import { readFileSync } from 'fs'
+import cookieParser from 'cookie-parser'
 import alias from './alias'
 alias()
 
@@ -16,7 +18,6 @@ import routes from '@app/routes'
 import LoggerService from '@app/services/Logger.service'
 import errorHandler from '@app/middleware/errorHandler'
 import { authenticationMiddleware } from '@app/middleware'
-import { readFileSync } from 'fs'
 
 const app = express()
 const PORT = process.env.PORT || 50001
@@ -33,44 +34,31 @@ db.on('query', (queryData: any) => {
 app.use(LoggerService.requestlogger)
 // Cross Origin Resource Sharing
 app.use(cors(config.corsConfig))
+app.use(cookieParser())
 
 app.use(urlencoded({ extended: true }))
 
 app.use(express.json())
 
-app.use(authenticationMiddleware)
 app.use('/', express.static(join(__dirname, '/public')))
+app.use('/', express.static(join(__dirname, '..', 'node_modules', 'bootstrap', 'dist', 'css')))
+app.use('/', express.static(join(__dirname, '..', 'node_modules', '@fortawesome', 'fontawesome-free', 'css')))
+app.use(
+  '/webfonts',
+  express.static(join(__dirname, '..', 'node_modules', '@fortawesome', 'fontawesome-free', 'webfonts')),
+)
 app.use('/auth', express.static(join(__dirname, '/public')))
 app.use('/file/image', express.static(join(__dirname, 'resources', 'static', 'assets', 'uploads')))
-
+app.set('view engine', 'ejs')
+app.use(authenticationMiddleware)
 routes(app)
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV !== 'production') {
   app.set('trust proxy', (ip: string) => {
     if (ip === '127.0.0.1' || ip === '123.123.123.123') return true
     return false
   })
-  import('./views/build/handler.mjs')
-    .then((module) => app.use(module.handler))
-    .catch((error) => {
-      console.error('Error importing module:', error)
-    })
-} else {
-  app.all('*', (req, res) => {
-    res.status(404)
-    if (req.accepts('html')) {
-      res.sendFile(join(__dirname, 'views', '404.html'))
-    } else if (req.accepts('json')) {
-      res.json({ error: '404 Not Found' })
-    } else {
-      res.type('txt').send('404 Not Found')
-    }
-  })
 }
-
-app.all('/api/*', (req, res) => {
-  res.status(404).json({ status: 'error', message: 'Resource not found' })
-})
 
 app.use(errorHandler)
 

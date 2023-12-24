@@ -13,6 +13,7 @@ export async function seed(knex: Knex): Promise<void> {
     { key: 'tax_percent', value: '1', table_name: 'product_financials' },
     { key: 'exchange_rounding', value: '0.5', table_name: 'product_financials' },
     { key: 'payment_fees', value: '1.95', table_name: 'product_financials' },
+    { key: 'under_construction', value: '1', table_name: 'N/A' },
   ])
 
   const currencies = await CurrencyConverterService.getCurrucies()

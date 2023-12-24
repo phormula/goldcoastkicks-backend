@@ -64,20 +64,20 @@ class User extends ModelBase {
     await User.query().deleteById(this.id)
   }
 
-  static get jsonSchema() {
-    return {
-      type: 'object',
-      required: ['first_name', 'last_name', 'email'],
+  // static get jsonSchema() {
+  //   return {
+  //     type: 'object',
+  //     required: ['first_name', 'last_name', 'email'],
 
-      properties: {
-        id: { type: 'integer' },
-        first_name: { type: 'string', minLength: 1, maxLength: 255 },
-        last_name: { type: 'string', minLength: 1, maxLength: 255 },
-        email: { type: 'string', minLength: 1, maxLength: 255 },
-        password: { type: 'string', minLength: 1, maxLength: 255 },
-      },
-    }
-  }
+  //     properties: {
+  //       id: { type: 'integer' },
+  //       first_name: { type: 'string', minLength: 1, maxLength: 255 },
+  //       last_name: { type: 'string', minLength: 1, maxLength: 255 },
+  //       email: { type: 'string', minLength: 1, maxLength: 255 },
+  //       password: { type: 'string', minLength: 1, maxLength: 255 },
+  //     },
+  //   }
+  // }
 
   static get relationMappings() {
     return {

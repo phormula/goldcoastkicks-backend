@@ -8,6 +8,12 @@ class AuthValidations {
     body('device_token_type').exists(),
   ]
   loginRules = [body('email').isEmail().exists(), body('password').exists(), ...this.commonloginRules]
+  webLoginRules = [
+    body('email').isEmail().exists(),
+    body('password').exists(),
+    body('_csrf').exists(),
+    ...this.commonloginRules,
+  ]
   oAuthRules = [body('id_token').exists(), ...this.commonloginRules]
 
   resetPasswordRequestRules = [body('email').isEmail().exists()]

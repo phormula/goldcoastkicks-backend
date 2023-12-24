@@ -8,34 +8,47 @@ import User from '@model/User'
 import Role from '@app/model/Role'
 import Mail from '@model/Mail'
 import OAuthService from '@app/services/OAuth.service'
+import LoggerService from '@app/services/Logger.service'
+import UserDeviceToken from '@app/model/UserDeviceToken'
 
 class AuthService {
   /**`
    * POST /auth/login
    * Login request
    */
-  async login(req: Request, res: Response, next: NextFunction) {
+  async login(data: { [key: string]: string | any }) {
     try {
-      const { email, password, is_mobile } = req.body
+      const { email, password, is_mobile, device_type, device_token, device_token_type, ip } = data
 
       // Find user by email address
       const user = await User.query().findOne({ email }).withGraphJoined('roles(defaultSelects)')
       if (!user) {
-        return res.status(400).json({ message: 'Incorrect email or password!' })
+        return { status: 'error', message: 'Incorrect email or password!' }
       }
 
       // Check user password
       const isValidPassword = await user.validatePassword(password)
       if (!isValidPassword) {
-        return res.status(400).json({ message: 'Incorrect email or password!' })
+        return { status: 'error', message: 'Incorrect email or password!' }
       }
       // Generate and return token
       const expires = is_mobile ? undefined : '24h'
       const token = user.generateToken(expires)
-      const refreshToken = user.generateToken('2h')
-      return res.status(200).json({ token, refreshToken, ...protectedUser(user) })
-    } catch (err) {
-      return next(err)
+      const refreshToken = user.generateToken(expires)
+      // console.log(ip)
+      await LoggerService.logEvents(`${JSON.stringify(protectedUser(user))} IP_address: ${ip}`, 'logins.log')
+      await UserDeviceToken.query().insertGraph(
+        {
+          device_type,
+          device_token,
+          device_token_type,
+          user,
+        },
+        { relate: true },
+      )
+      return { data: { token, refreshToken, ...protectedUser(user), user } }
+    } catch (err: any) {
+      throw new Error(err.message)
     }
   }
 

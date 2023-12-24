@@ -1,4 +1,4 @@
-export { authenticationMiddleware } from '@app/middleware/authentication'
+export { authenticationMiddleware, checkCsrfToken } from '@app/middleware/authentication'
 export { isAuthenticated } from '@app/middleware/isAuthenticated'
 export { isAdmin } from '@app/middleware/isAdmin'
 export { isSuperAdmin } from '@app/middleware/isSuperAdmin'

@@ -2,7 +2,7 @@ import 'dotenv/config'
 import { Request, Response, NextFunction } from 'express'
 import { hashSync } from 'bcryptjs'
 import { JwtPayload } from 'jsonwebtoken'
-import { protectedUser, verifyToken } from '@app/helpers'
+import { isAdmin, protectedUser, verifyToken } from '@app/helpers'
 import User from '@model/User'
 import Role from '@model/Role'
 import Mail from '@model/Mail'
@@ -11,6 +11,8 @@ import AuthService from '@app/services/Auth.service'
 import UserDeviceToken from '@app/model/UserDeviceToken'
 import LoggerService from '@app/services/Logger.service'
 import UserAddress from '@app/model/UserAddress'
+import { join } from 'path'
+import csrf from 'csrf'
 
 class AuthController {
   /**`
@@ -49,6 +51,31 @@ class AuthController {
         { relate: true },
       )
       return res.status(200).json({ data: { token, refreshToken, ...protectedUser(user) } })
+    } catch (err) {
+      return next(err)
+    }
+  }
+
+  async webLogin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || null
+      const result = await AuthService.login({ ...req.body, ip })
+
+      if (result.status === 'error') {
+        return res.render(join(__dirname, '..', 'views', 'login'), { csrfToken: req.body._csrf, ...result })
+      }
+
+      if (!isAdmin(result.data?.user as User)) {
+        return res.render(join(__dirname, '..', 'views', 'login'), {
+          csrfToken: req.body._csrf,
+          status: 'error',
+          message: 'You are not authorized',
+        })
+      }
+
+      res.clearCookie('token')
+      res.cookie('token', result.data?.token)
+      return res.redirect('/')
     } catch (err) {
       return next(err)
     }
@@ -116,10 +143,14 @@ class AuthController {
   async resetPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { newPassword, confirmPassword, token } = req.body
-      const tokenData = verifyToken(token) as JwtPayload
-      console.log(req.body)
+      const tokenData = verifyToken(token || req.query.token) as JwtPayload
+
       if (newPassword !== confirmPassword) {
-        return res.status(400).json({ status: 'error', message: 'Passwords do not match' })
+        return res.render(join(__dirname, '..', 'views', 'reset'), {
+          csrfToken: req.body._csrf,
+          status: 'error',
+          message: 'Passwords do not match',
+        })
       }
 
       const updateUser = await User.query()
@@ -129,7 +160,11 @@ class AuthController {
       // console.log(updateUser)
       // console.log(user)
       if (!updateUser) {
-        return res.status(400).json({ status: 'error', message: 'There is no user with this email address!' })
+        return res.render(join(__dirname, '..', 'views', 'reset'), {
+          csrfToken: req.body._csrf,
+          status: 'error',
+          message: 'There is no user with this email address!',
+        })
       }
 
       if (user) {
@@ -139,7 +174,12 @@ class AuthController {
           html: `<p>Your password has been succesfully reset</p>`,
         })
       }
-      return res.status(200).json({ success: true, message: 'password reset successful' })
+
+      return res.render(join(__dirname, '..', 'views', 'reset'), {
+        csrfToken: req.body._csrf,
+        status: 'success',
+        message: 'Your password has been succesfully reset',
+      })
     } catch (err) {
       return next(err)
     }
