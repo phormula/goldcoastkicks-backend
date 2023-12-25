@@ -21,6 +21,7 @@ import { authenticationMiddleware } from '@app/middleware'
 
 const app = express()
 const PORT = process.env.PORT || 50001
+let nodeModulesPath: string
 
 // Initialize knex.
 Model.knex(db)
@@ -40,25 +41,25 @@ app.use(urlencoded({ extended: true }))
 
 app.use(express.json())
 
-app.use('/', express.static(join(__dirname, '/public')))
-app.use('/', express.static(join(__dirname, '..', 'node_modules', 'bootstrap', 'dist', 'css')))
-app.use('/', express.static(join(__dirname, '..', 'node_modules', '@fortawesome', 'fontawesome-free', 'css')))
-app.use(
-  '/webfonts',
-  express.static(join(__dirname, '..', 'node_modules', '@fortawesome', 'fontawesome-free', 'webfonts')),
-)
-app.use('/auth', express.static(join(__dirname, '/public')))
-app.use('/file/image', express.static(join(__dirname, 'resources', 'static', 'assets', 'uploads')))
-app.set('view engine', 'ejs')
-app.use(authenticationMiddleware)
-routes(app)
-
 if (process.env.NODE_ENV !== 'production') {
   app.set('trust proxy', (ip: string) => {
     if (ip === '127.0.0.1' || ip === '123.123.123.123') return true
     return false
   })
+  nodeModulesPath = join(__dirname, '..', 'node_modules')
+} else {
+  nodeModulesPath = join(__dirname, 'node_modules')
 }
+
+app.use('/', express.static(join(__dirname, '/public')))
+app.use('/auth', express.static(join(__dirname, '/public')))
+app.use('/', express.static(join(nodeModulesPath, 'bootstrap', 'dist', 'css')))
+app.use('/', express.static(join(nodeModulesPath, '@fortawesome', 'fontawesome-free', 'css')))
+app.use('/webfonts', express.static(join(nodeModulesPath, '@fortawesome', 'fontawesome-free', 'webfonts')))
+app.use('/file/image', express.static(join(__dirname, 'resources', 'static', 'assets', 'uploads')))
+app.set('view engine', 'ejs')
+app.use(authenticationMiddleware)
+routes(app)
 
 app.use(errorHandler)
 

@@ -1,7 +1,7 @@
-import Product from '@model/Product'
-import db from '@app/database/knexdb'
+import Product from '../model/Product'
+import db from '../database/knexdb'
 import { Model } from 'objection'
-import { createUniqueProductSlug } from '@app/helpers'
+import { createUniqueProductSlug } from '../helpers'
 
 async function run() {
   const products = await Product.query()
