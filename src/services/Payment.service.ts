@@ -1,25 +1,33 @@
+import { PaymentPayload } from '@app/types/payment.type'
 import 'dotenv/config'
-import { OAuth2Client } from 'google-auth-library'
 
 class PaymentService {
-  client: OAuth2Client
+  paystackBaseUrl: string
+  paystackKey: string
 
-  constructor(clientId: string) {
-    this.client = new OAuth2Client(clientId)
+  constructor() {
+    this.paystackBaseUrl = 'https://api.paystack.co'
+    this.paystackKey = String(process.env.PAYSTACK_SECRET_KEY)
   }
 
-  async pay(token: string) {
+  async pay(payload: PaymentPayload) {
     try {
-      const ticket = await this.client.verifyIdToken({
-        idToken: token,
-        audience: this.client._clientId,
-      })
+      const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.paystackKey}`,
+      }
 
-      const payload = ticket.getPayload()
-      return payload
+      const response = await fetch(`${this.paystackBaseUrl}/transaction/initialize`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload),
+      })
+      const result = await response.json()
+      return result
     } catch (error: any) {
-      return error
+      console.error(error)
+      throw new Error(error)
     }
   }
 }
-export default new PaymentService(String(process.env.GOOGLE_CLIENT_ID))
+export default new PaymentService()

@@ -1,6 +1,6 @@
 import 'dotenv/config'
-import dns from 'dns'
-dns.setDefaultResultOrder('ipv4first')
+// import dns from 'dns'
+// dns.setDefaultResultOrder('ipv4first')
 import { createServer } from 'http'
 import { createServer as _createServer } from 'https'
 import express, { urlencoded } from 'express'
@@ -41,14 +41,14 @@ app.use(urlencoded({ extended: true }))
 
 app.use(express.json())
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', (ip: string) => {
     if (ip === '127.0.0.1' || ip === '123.123.123.123') return true
     return false
   })
-  nodeModulesPath = join(__dirname, '..', 'node_modules')
-} else {
   nodeModulesPath = join(__dirname, 'node_modules')
+} else {
+  nodeModulesPath = join(__dirname, '..', 'node_modules')
 }
 
 app.use('/', express.static(join(__dirname, '/public')))
@@ -69,12 +69,12 @@ if (process.env.NODE_ENV !== 'production') {
   //   })
   _createServer(
     {
-      key: readFileSync('sneakers.dentricelectrical.com-key.pem'),
-      cert: readFileSync('sneakers.dentricelectrical.com.pem'),
+      key: readFileSync('test.goldcoastkicks.com-key.pem'),
+      cert: readFileSync('test.goldcoastkicks.com.pem'),
     },
     app,
   ).listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
+    console.log(`Dev Server running on port ${PORT}`)
   })
 } else {
   createServer(app).listen(PORT, () => {
