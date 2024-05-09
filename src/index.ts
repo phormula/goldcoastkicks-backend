@@ -64,18 +64,18 @@ routes(app)
 app.use(errorHandler)
 
 if (process.env.NODE_ENV !== 'production') {
-  //   createServer(app).listen(PORT, () => {
-  //     console.log(`Dev Server running on port ${PORT}`)
-  //   })
-  _createServer(
-    {
-      key: readFileSync('test.goldcoastkicks.com-key.pem'),
-      cert: readFileSync('test.goldcoastkicks.com.pem'),
-    },
-    app,
-  ).listen(PORT, () => {
+  createServer(app).listen(PORT, () => {
     console.log(`Dev Server running on port ${PORT}`)
   })
+  // _createServer(
+  //   {
+  //     key: readFileSync('test.goldcoastkicks.com-key.pem'),
+  //     cert: readFileSync('test.goldcoastkicks.com.pem'),
+  //   },
+  //   app,
+  // ).listen(PORT, () => {
+  //   console.log(`Dev Server running on port ${PORT}`)
+  // })
 } else {
   createServer(app).listen(PORT, () => {
     console.log(`Production Server running on port ${PORT}`)

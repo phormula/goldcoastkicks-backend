@@ -1,21 +1,16 @@
 import fetch from 'cross-fetch'
 
-class CurrencyConverterService {
+class CurrencyService {
   async convert(fromCurrencyCode: string, toCurrencyCode?: string) {
-    let url: string
     if (!fromCurrencyCode) {
       throw new Error('Currency not found')
     }
-    if (toCurrencyCode) {
-      url = `https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/${fromCurrencyCode}/${toCurrencyCode}.json`
-    } else {
-      url = `https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/${fromCurrencyCode}.json`
-    }
+    const url = `${process.env.CURRENCY_API}latest/v1/currencies/${fromCurrencyCode}.json`
 
     try {
       const response = await fetch(url)
       const res = await response.json()
-      return res
+      return toCurrencyCode ? res[fromCurrencyCode][toCurrencyCode] : res
     } catch (error) {
       console.error(error)
       return error
@@ -24,7 +19,7 @@ class CurrencyConverterService {
 
   async getCurrucies() {
     try {
-      const response = await fetch('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies.json')
+      const response = await fetch(`${process.env.CURRENCY_API}latest/v1/currencies.json`)
       const data = await response.json()
       const currencies: any[] = Object.keys(data)
       let formatCurrency: any[] = []
@@ -39,4 +34,4 @@ class CurrencyConverterService {
   }
 }
 
-export default new CurrencyConverterService()
+export default new CurrencyService()

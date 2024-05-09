@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import CurrencyConverterService from '@app/services/currency-converter.service'
+import CurrencyService from '@app/services/Currency.service'
 import Currency from '@model/Currency'
 import db from '@app/database/knexdb'
 
@@ -83,7 +83,7 @@ class CurrencyController {
 
   async addCurrenciesToDb(req: Request, res: Response, next: NextFunction) {
     try {
-      const currencies = await CurrencyConverterService.getCurrucies()
+      const currencies = await CurrencyService.getCurrucies()
       await db('currencies').insert(currencies)
 
       return res.status(201).send({ success: true })
@@ -95,7 +95,7 @@ class CurrencyController {
   async convert(req: Request, res: Response, next: NextFunction) {
     try {
       const { from, to } = req.body
-      const currencyConverter = await CurrencyConverterService.convert(from, to)
+      const currencyConverter = await CurrencyService.convert(from, to)
 
       return res.status(200).send({ data: currencyConverter })
     } catch (err) {

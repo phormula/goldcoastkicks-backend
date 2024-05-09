@@ -63,13 +63,9 @@ class UserService {
   }
 
   async getUserRoles() {
-    try {
-      const roles = await Role.query().select('*')
-
-      return { data: roles }
-    } catch (err: any) {
-      throw new Error(err.message)
-    }
+    const roles = await Role.query().select('*')
+    console.log(roles)
+    return { data: roles }
   }
 
   async getMailTemplates() {

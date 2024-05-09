@@ -1,5 +1,5 @@
 import { Knex } from 'knex'
-import CurrencyConverterService from '../../services/currency-converter.service'
+import CurrencyService from '../../services/Currency.service'
 
 export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
@@ -16,7 +16,7 @@ export async function seed(knex: Knex): Promise<void> {
     { key: 'under_construction', value: '1', table_name: 'N/A' },
   ])
 
-  const currencies = await CurrencyConverterService.getCurrucies()
+  const currencies = await CurrencyService.getCurrucies()
   await knex('currencies').del()
   await knex('currencies').insert(currencies)
   await knex('currencies').where({ code: 'cny' }).update({

@@ -13,10 +13,10 @@ export function up(knex: Knex): Promise<void> {
     })
     .createTable('orders', function (table: Knex.TableBuilder) {
       table.bigIncrements('id')
-      table.bigInteger('user_id').unsigned().references('id').inTable('users')
-      table.integer('order_status_id').unsigned().references('id').inTable('order_statuses')
+      table.bigInteger('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
+      table.integer('order_status_id').unsigned().references('id').inTable('order_statuses').onDelete('CASCADE')
       table.text('note')
-      table.integer('currency_id').unsigned().references('id').inTable('currencies')
+      table.integer('currency_id').unsigned().references('id').inTable('currencies').onDelete('CASCADE')
       table.integer('shipping_id').unsigned().references('id').inTable('shipping').onDelete('CASCADE')
       table.double('shipping_amount')
       table.timestamp('created_at').defaultTo(knex.fn.now())
@@ -24,7 +24,7 @@ export function up(knex: Knex): Promise<void> {
     })
     .createTable('order_items', (table: Knex.TableBuilder) => {
       table.increments('id').primary()
-      table.bigInteger('order_id').unsigned().references('id').inTable('orders')
+      table.bigInteger('order_id').unsigned().references('id').inTable('orders').onDelete('CASCADE')
       table.integer('quantity')
       table.integer('product_id').unsigned().references('id').inTable('products').onDelete('CASCADE')
       table.integer('colorway_id').unsigned().references('id').inTable('colorways').onDelete('CASCADE')

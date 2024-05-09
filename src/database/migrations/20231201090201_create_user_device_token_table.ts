@@ -3,7 +3,7 @@ import { Knex } from 'knex'
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('user_device_tokens', (table) => {
     table.increments('id').primary()
-    table.bigInteger('user_id').unsigned().references('id').inTable('users')
+    table.bigInteger('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
     table.string('device_type', 10)
     table.text('device_token')
     table.string('device_token_type')
